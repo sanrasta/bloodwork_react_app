@@ -1,0 +1,114 @@
+# 🩸 Bloodwork React App - Git Ignore File
+
+# ==========================================
+# NODE.JS / NPM
+# ==========================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# ==========================================
+# REACT NATIVE / EXPO
+# ==========================================
+.expo/
+dist/
+web-build/
+
+# Native builds
+ios/
+android/
+
+# Metro
+.metro-health-check*
+
+# ==========================================
+# NESTJS BACKEND
+# ==========================================
+# Build outputs
+bloodwork-backend/dist/
+bloodwork-backend/build/
+
+# Database files
+bloodwork-backend/*.db
+bloodwork-backend/*.sqlite
+bloodwork-backend/*.sqlite3
+bloodwork-backend/bloodwork.db*
+
+# Upload directory (files uploaded during development)
+bloodwork-backend/uploads/
+bloodwork-backend/temp/
+
+# ==========================================
+# ENVIRONMENT & CONFIG
+# ==========================================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*.local
+
+# ==========================================
+# LOGS
+# ==========================================
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# ==========================================
+# RUNTIME & CACHE
+# ==========================================
+.cache/
+.tmp/
+.temp/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# ==========================================
+# IDE / EDITOR
+# ==========================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ==========================================
+# OS GENERATED
+# ==========================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# ==========================================
+# TESTING
+# ==========================================
+coverage/
+*.lcov
+.nyc_output
+
+# ==========================================
+# MISC
+# ==========================================
+*.tgz
+*.tar.gz
+
+# Temporary files
+tmp/
+temp/
+
+# Package manager lockfiles (optional - you can keep these)
+# package-lock.json
+# yarn.lock
