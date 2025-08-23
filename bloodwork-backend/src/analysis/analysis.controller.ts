@@ -27,6 +27,7 @@ import {
   HttpCode,
   HttpStatus,
   ParseUUIDPipe,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -39,9 +40,11 @@ import { AnalysisService } from './analysis.service';
 import { CreateAnalysisDto } from '../common/dto/create-analysis.dto';
 import { AnalysisJobResponseDto } from '../common/dto/analysis-job-response.dto';
 import { JobStatus } from '../common/entities/analysis-job.entity';
+import { ClerkAuthGuard, CurrentUser, Public } from '../auth';
 
 @ApiTags('analysis')
 @Controller('analysis')
+@UseGuards(ClerkAuthGuard)
 export class AnalysisController {
   constructor(private readonly analysisService: AnalysisService) {}
 
@@ -81,6 +84,7 @@ export class AnalysisController {
   })
   async createAnalysisJob(
     @Body() createAnalysisDto: CreateAnalysisDto,
+    @CurrentUser() userId: string,
   ): Promise<AnalysisJobResponseDto> {
     /**
      * Delegate to service layer for business logic
@@ -89,7 +93,7 @@ export class AnalysisController {
      * while the service handles business logic (job creation, queue management).
      * This separation enables testing and code reuse.
      */
-    return this.analysisService.startAnalysis(createAnalysisDto.uploadId);
+    return this.analysisService.startAnalysis(createAnalysisDto.uploadId, userId);
   }
 
   /**
@@ -128,6 +132,7 @@ export class AnalysisController {
   })
   async getAnalysisStatus(
     @Param('jobId', ParseUUIDPipe) jobId: string,
+    @CurrentUser() userId: string,
   ): Promise<AnalysisJobResponseDto> {
     /**
      * Simple delegation to service layer
@@ -136,7 +141,7 @@ export class AnalysisController {
      * so it needs to be fast and lightweight. The service handles caching
      * and optimization concerns.
      */
-    return this.analysisService.getJobStatus(jobId);
+    return this.analysisService.getJobStatus(jobId, userId);
   }
 
   /**
@@ -259,6 +264,7 @@ export class AnalysisController {
    * - Current job counts by status
    * - Service configuration
    */
+  @Public()
   @Get('health/status')
   @ApiOperation({
     summary: 'Check analysis service health',

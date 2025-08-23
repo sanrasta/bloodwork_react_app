@@ -36,6 +36,7 @@ import configuration from './config/configuration';
 import { UploadsModule } from './uploads/uploads.module';
 import { AnalysisModule } from './analysis/analysis.module';
 import { ResultsModule } from './results/results.module';
+import { AuthModule } from './auth/auth.module';
 
 // Import entities for database setup
 import { Upload } from './common/entities/upload.entity';
@@ -219,6 +220,7 @@ import { AppService } from './app.service';
      * - Enhanced data with statistics and insights
      * - Medical context and safety disclaimers
      */
+    AuthModule,
     UploadsModule,
     AnalysisModule,
     ResultsModule,

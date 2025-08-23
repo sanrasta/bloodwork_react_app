@@ -46,12 +46,13 @@ export class UploadsService {
    * 2. Creates database record with metadata
    * 3. Returns structured response for React Native
    */
-  async saveUpload(file: Express.Multer.File): Promise<UploadResponseDto> {
+  async saveUpload(file: Express.Multer.File, userId: string): Promise<UploadResponseDto> {
     // Business validation beyond multer's basic checks
     this.validateUploadedFile(file);
 
     // Create database entity with file metadata
     const upload = this.uploadRepository.create({
+      userId,                        // Associate with authenticated user
       filename: file.filename,        // UUID-based filename from multer
       originalName: file.originalname, // User's original filename
       mimetype: file.mimetype,        // Should be 'application/pdf'
@@ -70,15 +71,15 @@ export class UploadsService {
   }
 
   /**
-   * Retrieves upload record by ID
+   * Retrieves upload record by ID for a specific user
    * 
    * WHY: Other services (analysis, cleanup) need to access upload
-   * metadata and file paths. This provides a clean interface.
+   * metadata and file paths. This provides a clean interface with user isolation.
    * 
    * USAGE: Analysis service uses this to get file path for processing
    */
-  async findById(id: string): Promise<Upload> {
-    const upload = await this.uploadRepository.findOne({ where: { id } });
+  async findById(id: string, userId: string): Promise<Upload> {
+    const upload = await this.uploadRepository.findOne({ where: { id, userId } });
     
     if (!upload) {
       throw new NotFoundException(`Upload with ID ${id} not found`);
@@ -88,13 +89,13 @@ export class UploadsService {
   }
 
   /**
-   * Retrieves upload record with file existence check
+   * Retrieves upload record with file existence check for a specific user
    * 
    * WHY: Ensures the database record exists AND the actual file
    * is still on the file system. Protects against orphaned records.
    */
-  async findByIdWithFileCheck(id: string): Promise<Upload> {
-    const upload = await this.findById(id);
+  async findByIdWithFileCheck(id: string, userId: string): Promise<Upload> {
+    const upload = await this.findById(id, userId);
     
     // Check if physical file still exists
     const fs = require('fs');

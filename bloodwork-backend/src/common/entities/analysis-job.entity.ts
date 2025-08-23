@@ -40,6 +40,13 @@ export class AnalysisJob {
   id: string;
 
   /**
+   * User ID from Clerk authentication
+   * Associates this job with the authenticated user
+   */
+  @Column()
+  userId: string;
+
+  /**
    * Foreign key to Upload entity
    * Links this job to the specific PDF file being analyzed
    */

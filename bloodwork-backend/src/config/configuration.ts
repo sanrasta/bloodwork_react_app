@@ -29,6 +29,9 @@ export interface AppConfig {
   api: {
     prefix: string;
   };
+  clerk: {
+    secretKey: string;
+  };
 }
 
 export default (): AppConfig => {
@@ -54,6 +57,9 @@ export default (): AppConfig => {
     },
     api: {
       prefix: process.env.API_PREFIX || 'api',
+    },
+    clerk: {
+      secretKey: process.env.CLERK_SECRET_KEY || '',
     },
   };
 };

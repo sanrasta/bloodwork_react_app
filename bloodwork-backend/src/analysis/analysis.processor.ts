@@ -33,6 +33,7 @@ import { JobStatus } from '../common/entities/analysis-job.entity';
  */
 interface BloodworkJobData {
   jobId: string;
+  userId: string;
   uploadId: string;
   filePath: string;
   originalName: string;
@@ -67,7 +68,7 @@ export class AnalysisProcessor {
    */
   @Process('processBloodwork')
   async handleBloodworkAnalysis(job: Job<BloodworkJobData>): Promise<void> {
-    const { jobId, uploadId, filePath, originalName } = job.data;
+    const { jobId, userId, uploadId, filePath, originalName } = job.data;
     
     this.logger.log(`Starting analysis for job ${jobId}, file: ${originalName}`);
 
@@ -95,6 +96,7 @@ export class AnalysisProcessor {
       // Phase 6: Save results to database
       const result = await this.resultsService.createResult({
         jobId,
+        userId,
         ...mockResults,
       });
 

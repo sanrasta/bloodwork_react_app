@@ -94,7 +94,7 @@ export class ResultsService {
   }
 
   /**
-   * Retrieves result by ID with enhanced data
+   * Retrieves result by ID with enhanced data for a specific user
    * 
    * WHY: This is the main method called by your React Native app when
    * displaying the ResultSummary. It provides not just the raw data,
@@ -102,8 +102,8 @@ export class ResultsService {
    * 
    * USAGE: GET /results/:resultId endpoint calls this method
    */
-  async findByIdWithEnhancements(id: string): Promise<EnhancedBloodworkResult> {
-    const result = await this.resultRepository.findOne({ where: { id } });
+  async findByIdWithEnhancements(id: string, userId: string): Promise<EnhancedBloodworkResult> {
+    const result = await this.resultRepository.findOne({ where: { id, userId } });
     
     if (!result) {
       throw new NotFoundException(`Bloodwork result ${id} not found`);
