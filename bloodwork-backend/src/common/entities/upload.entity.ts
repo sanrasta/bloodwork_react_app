@@ -27,6 +27,13 @@ export class Upload {
   id: string;
 
   /**
+   * User ID from Clerk authentication
+   * Associates this upload with the authenticated user
+   */
+  @Column()
+  userId: string;
+
+  /**
    * Generated filename on server (with UUID to prevent conflicts)
    * Example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890.pdf"
    */

@@ -45,6 +45,13 @@ export class BloodworkResult {
   id: string;
 
   /**
+   * User ID from Clerk authentication
+   * Associates this result with the authenticated user
+   */
+  @Column()
+  userId: string;
+
+  /**
    * Foreign key to AnalysisJob entity
    * Enables tracing results back to original job and upload
    */

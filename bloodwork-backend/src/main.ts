@@ -19,6 +19,7 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { clerkMiddleware } from '@clerk/express';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
@@ -29,6 +30,24 @@ async function bootstrap() {
    * controllers, services, and dependencies properly wired together.
    */
   const app = await NestFactory.create(AppModule);
+
+  /**
+   * 🔐 Configure Clerk Authentication Middleware
+   * 
+   * WHY: Enables JWT token verification and populates req.auth with user
+   * session data for all protected routes. This must be set up before
+   * route handlers to authenticate users.
+   */
+  const configService = app.get(ConfigService);
+  const clerkSecretKey = configService.get<string>('clerk.secretKey');
+  
+  if (clerkSecretKey) {
+    app.use(clerkMiddleware({
+      secretKey: clerkSecretKey,
+    }));
+  } else {
+    console.warn('⚠️  CLERK_SECRET_KEY not found. Authentication will be disabled in development.');
+  }
 
   /**
    * 🌍 Configure CORS for React Native
@@ -73,8 +92,7 @@ async function bootstrap() {
    * WHY: Makes your API accessible to your React Native app.
    * Uses the port from your environment configuration.
    */
-  const configService = app.get(ConfigService);
-  const port = configService.get<number>('app.port') || 3000;
+  const port = configService.get<number>('port') || 3000;
 
   await app.listen(port);
 

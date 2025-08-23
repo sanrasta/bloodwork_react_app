@@ -50,13 +50,13 @@ export class AnalysisService {
    * 3. Add job to Bull queue for background processing
    * 4. Return job details for React Native polling
    */
-  async startAnalysis(uploadId: string): Promise<AnalysisJobResponseDto> {
-    // Verify upload exists and file is accessible
-    const upload = await this.uploadsService.findByIdWithFileCheck(uploadId);
+  async startAnalysis(uploadId: string, userId: string): Promise<AnalysisJobResponseDto> {
+    // Verify upload exists and file is accessible for this user
+    const upload = await this.uploadsService.findByIdWithFileCheck(uploadId, userId);
     
     // Check if analysis already exists for this upload
     const existingJob = await this.jobRepository.findOne({
-      where: { uploadId, status: JobStatus.QUEUED },
+      where: { uploadId, userId, status: JobStatus.QUEUED },
     });
     
     if (existingJob) {
@@ -67,6 +67,7 @@ export class AnalysisService {
 
     // Create job record in database
     const job = this.jobRepository.create({
+      userId,
       uploadId,
       status: JobStatus.QUEUED,
       progress: 0,
@@ -77,6 +78,7 @@ export class AnalysisService {
     // Add job to background processing queue
     await this.analysisQueue.add('processBloodwork', {
       jobId: savedJob.id,
+      userId,
       uploadId,
       filePath: upload.path,
       originalName: upload.originalName,
@@ -97,8 +99,8 @@ export class AnalysisService {
    * React Native timer -> GET /analysis/:jobId -> This method -> Updated status
    * Progress bar updates, status changes, completion detection
    */
-  async getJobStatus(jobId: string): Promise<AnalysisJobResponseDto> {
-    const job = await this.jobRepository.findOne({ where: { id: jobId } });
+  async getJobStatus(jobId: string, userId: string): Promise<AnalysisJobResponseDto> {
+    const job = await this.jobRepository.findOne({ where: { id: jobId, userId } });
     
     if (!job) {
       throw new NotFoundException(`Analysis job ${jobId} not found`);

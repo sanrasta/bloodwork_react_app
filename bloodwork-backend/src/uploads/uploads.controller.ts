@@ -26,6 +26,8 @@ import {
   ParseFilePipeBuilder,
   HttpStatus,
   BadRequestException,
+  UseGuards,
+  Get,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiResponse, ApiConsumes } from '@nestjs/swagger';
@@ -35,9 +37,11 @@ import { v4 as uuidv4 } from 'uuid';
 import { UploadsService } from './uploads.service';
 import { UploadResponseDto } from '../common/dto/upload-response.dto';
 import { ConfigService } from '@nestjs/config';
+import { ClerkAuthGuard, CurrentUser, Public } from '../auth';
 
 @ApiTags('uploads')
 @Controller('uploads')
+@UseGuards(ClerkAuthGuard)
 export class UploadsController {
   constructor(
     private readonly uploadsService: UploadsService,
@@ -135,6 +139,7 @@ export class UploadsController {
         }),
     )
     file: Express.Multer.File,
+    @CurrentUser() userId: string,
   ): Promise<UploadResponseDto> {
     /**
      * Delegate to service layer for business logic
@@ -143,7 +148,7 @@ export class UploadsController {
      * while services handle business logic. This separation enables
      * testing and reuse of upload logic in other contexts.
      */
-    return this.uploadsService.saveUpload(file);
+    return this.uploadsService.saveUpload(file, userId);
   }
 
   /**
@@ -153,7 +158,8 @@ export class UploadsController {
    * Can be called by your React Native app to verify upload endpoint
    * is available before attempting file uploads.
    */
-  @Post('health')
+  @Public()
+  @Get('health')
   @ApiOperation({ 
     summary: 'Check upload service health',
     description: 'Verifies upload service is available and properly configured.',
