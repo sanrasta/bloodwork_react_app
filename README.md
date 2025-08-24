@@ -1,5 +1,7 @@
 # 🩸 Bloodwork Analysis Platform
 
+![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/sanrasta/bloodwork_react_app?utm_source=oss&utm_medium=github&utm_campaign=sanrasta%2Fbloodwork_react_app&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)
+
 A complete AI-powered bloodwork analysis platform built with **React Native** and **NestJS**. Upload PDF bloodwork results, get AI-powered health recommendations, and track your health insights over time.
 
 ## 🎯 Overview
