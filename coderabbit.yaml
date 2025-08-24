@@ -1,0 +1,202 @@
+# CodeRabbit configuration for Bloodwork Analysis App
+# React Native frontend + NestJS backend with AI integration
+
+# Review settings
+reviews:
+  # Enable auto-reviews for all PRs
+  auto_review: true
+  
+  # Review depth and focus areas
+  review_level: "comprehensive"
+  
+  # Include security analysis
+  security_analysis: true
+  
+  # Performance analysis for React Native and Node.js
+  performance_analysis: true
+  
+  # Architecture review for medical app
+  architecture_review: true
+
+# Language-specific settings
+languages:
+  typescript:
+    # Enable strict TypeScript analysis
+    strict_mode: true
+    # Focus on type safety for medical data
+    type_safety: true
+    # Check for proper error handling
+    error_handling: true
+    
+  javascript:
+    # React Native specific checks
+    react_native: true
+    # Performance optimizations
+    performance: true
+    
+  yaml:
+    # Configuration file validation
+    validation: true
+
+# Project-specific focus areas
+focus_areas:
+  - "medical_data_handling"
+  - "security_compliance"
+  - "api_design"
+  - "error_handling"
+  - "performance"
+  - "accessibility"
+  - "testing"
+  - "documentation"
+
+# File patterns to prioritize
+priority_files:
+  # Backend critical files
+  - "bloodwork-backend/src/**/*.ts"
+  - "bloodwork-backend/src/analysis/**"
+  - "bloodwork-backend/src/results/**"
+  - "bloodwork-backend/src/auth/**"
+  
+  # Frontend critical files  
+  - "bloodwork_app/src/**/*.tsx"
+  - "bloodwork_app/src/features/**"
+  - "bloodwork_app/src/shared/**"
+  
+  # Configuration files
+  - "*.json"
+  - "*.yaml"
+  - "*.yml"
+  - ".env*"
+
+# Files to ignore in reviews
+ignore_patterns:
+  - "node_modules/**"
+  - "dist/**"
+  - "build/**"
+  - "coverage/**"
+  - "*.log"
+  - "*.lock"
+  - ".expo/**"
+  - "uploads/**"
+  - "bloodwork.db"
+
+# Medical app specific checks
+custom_rules:
+  # Data privacy and security
+  - name: "medical_data_privacy"
+    description: "Ensure medical data is properly encrypted and anonymized"
+    severity: "high"
+    
+  - name: "hipaa_compliance"
+    description: "Check for HIPAA compliance in data handling"
+    severity: "high"
+    
+  - name: "error_logging"
+    description: "Ensure sensitive data is not logged in errors"
+    severity: "medium"
+    
+  - name: "api_authentication"
+    description: "Verify all medical data endpoints require authentication"
+    severity: "high"
+    
+  - name: "input_validation"
+    description: "Validate all user inputs, especially file uploads"
+    severity: "high"
+
+# AI-specific checks for OpenAI integration
+ai_integration:
+  - name: "prompt_injection"
+    description: "Check for potential prompt injection vulnerabilities"
+    severity: "high"
+    
+  - name: "api_key_security" 
+    description: "Ensure API keys are properly secured"
+    severity: "critical"
+    
+  - name: "rate_limiting"
+    description: "Verify rate limiting is implemented for AI calls"
+    severity: "medium"
+
+# React Native specific checks
+mobile_app:
+  - name: "performance_optimization"
+    description: "Check for React Native performance best practices"
+    severity: "medium"
+    
+  - name: "accessibility"
+    description: "Ensure app is accessible for users with disabilities"
+    severity: "medium"
+    
+  - name: "safe_area_handling"
+    description: "Proper handling of device safe areas and notches"
+    severity: "low"
+
+# NestJS backend specific checks  
+backend_api:
+  - name: "dependency_injection"
+    description: "Proper use of NestJS dependency injection"
+    severity: "medium"
+    
+  - name: "dto_validation"
+    description: "Ensure all DTOs have proper validation"
+    severity: "high"
+    
+  - name: "database_queries"
+    description: "Check for SQL injection and query optimization"
+    severity: "high"
+    
+  - name: "background_jobs"
+    description: "Proper error handling in Bull queue processors"
+    severity: "medium"
+
+# Comment style preferences
+comments:
+  # Be constructive and educational
+  tone: "constructive"
+  
+  # Include code suggestions
+  suggest_fixes: true
+  
+  # Explain the reasoning behind suggestions
+  explain_reasoning: true
+  
+  # Focus on medical app context
+  context_aware: true
+
+# Review summary preferences
+summary:
+  # Include security assessment
+  include_security_summary: true
+  
+  # Include performance impact
+  include_performance_summary: true
+  
+  # Include architectural feedback
+  include_architecture_summary: true
+  
+  # Medical compliance summary
+  include_compliance_summary: true
+
+# Integration settings
+integrations:
+  # GitHub integration
+  github:
+    # Auto-assign reviewers
+    auto_assign: true
+    
+    # Create review summary as PR comment
+    summary_comment: true
+    
+    # Update PR status checks
+    status_checks: true
+
+# Notification preferences
+notifications:
+  # Notify on critical security issues
+  critical_issues: true
+  
+  # Notify on breaking changes
+  breaking_changes: true
+  
+  # Summary notifications
+  review_summary: true
