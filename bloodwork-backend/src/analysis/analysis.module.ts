@@ -18,13 +18,14 @@
  * React Native polling -> AnalysisController -> Real-time status updates
  */
 
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BullModule } from '@nestjs/bull';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AnalysisController } from './analysis.controller';
 import { AnalysisService } from './analysis.service';
 import { AnalysisProcessor } from './analysis.processor';
+import { PdfParserService } from './pdf-parser.service';
 import { AnalysisJob } from '../common/entities/analysis-job.entity';
 import { UploadsModule } from '../uploads/uploads.module';
 import { ResultsModule } from '../results/results.module';
@@ -91,6 +92,8 @@ import { ResultsModule } from '../results/results.module';
      * WHY: AnalysisProcessor needs to store the final analyzed data
      * that React Native will display. This completes the full pipeline:
      * Upload → Analysis → Results → Display
+     * 
+     * Using direct import instead of forwardRef to avoid circular dependency
      */
     ResultsModule,
   ],
@@ -125,13 +128,20 @@ import { ResultsModule } from '../results/results.module';
     AnalysisService,
 
     /**
-     * AnalysisProcessor - Background worker for AI simulation
+     * AnalysisProcessor - Background job processing
      * 
-     * WHY: This is where the actual "AI analysis" happens. Currently
-     * simulates AI processing with realistic timing and progress updates.
-     * Easy to replace with real AI services when ready.
+     * WHY: Handles the actual PDF parsing and analysis in the background.
+     * Processes jobs from the Bull queue asynchronously.
      */
     AnalysisProcessor,
+
+    /**
+     * PdfParserService - Real PDF text extraction and parsing
+     * 
+     * WHY: Extracts actual test results from uploaded PDFs instead of
+     * using mock data. Handles various lab report formats.
+     */
+    PdfParserService,
   ],
 
   /**

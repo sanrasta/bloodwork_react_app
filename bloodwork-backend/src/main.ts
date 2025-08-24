@@ -40,13 +40,21 @@ async function bootstrap() {
    */
   const configService = app.get(ConfigService);
   const clerkSecretKey = configService.get<string>('clerk.secretKey');
-  
-  if (clerkSecretKey) {
-    app.use(clerkMiddleware({
-      secretKey: clerkSecretKey,
-    }));
+  const clerkPublishableKey = configService.get<string>('clerk.publishableKey');
+
+  if (clerkSecretKey && clerkPublishableKey && clerkSecretKey !== 'your_clerk_secret_key_here') {
+    const protectedClerk = clerkMiddleware({ 
+      secretKey: clerkSecretKey, 
+      publishableKey: clerkPublishableKey 
+    });
+    app.use('/api', (req, res, next) => {
+      const p = (req as any).path?.replace(/\/+$/, '') || '';
+      if (p === '/health' || p === '/info') return next();
+      return (protectedClerk as any)(req, res, next);
+    });
+    console.log('✅ Clerk authentication enabled');
   } else {
-    console.warn('⚠️  CLERK_SECRET_KEY not found. Authentication will be disabled in development.');
+    console.warn('⚠️ Clerk disabled: set CLERK_SECRET_KEY & CLERK_PUBLISHABLE_KEY to enable.');
   }
 
   /**
@@ -94,7 +102,27 @@ async function bootstrap() {
    */
   const port = configService.get<number>('port') || 3000;
 
-  await app.listen(port);
+  // Log all routes to identify wildcard patterns
+  function logExpressRoutes() {
+    const httpAdapter = app.getHttpAdapter?.();
+    const instance: any = httpAdapter?.getInstance?.();
+    const stack = instance?._router?.stack ?? [];
+    console.log('\n🧭 Registered routes:');
+    for (const layer of stack) {
+      if (layer?.route?.path) {
+        const methods = Object.keys(layer.route.methods || {}).map(m => m.toUpperCase()).join(',');
+        const path = Array.isArray(layer.route.path) ? layer.route.path.join(',') : layer.route.path;
+        const starWarn = /(^|\W)\*(\W|$)|\/\*/.test(String(path)) ? '  ⚠️ contains "*" — replace with "(.*)" or ":splat(*)"' : '';
+        console.log(`   ${methods.padEnd(8)} ${path}${starWarn}`);
+      } else if (layer?.name === 'router' && layer?.regexp) {
+        console.log(`   ROUTER   ${String(layer.regexp)}`);
+      }
+    }
+    console.log('');
+  }
+
+  logExpressRoutes();
+  await app.listen(port, '0.0.0.0');
 
   /**
    * 📋 Startup Information

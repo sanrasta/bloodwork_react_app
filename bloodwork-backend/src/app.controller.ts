@@ -45,7 +45,7 @@ export class AppController {
    * WHY: Provides detailed API capabilities and endpoints
    * for your React Native app to discover available features.
    */
-  @Get('api/info')
+  @Get('info')
   getDetailedApiInfo() {
     return this.appService.getDetailedApiInfo();
   }

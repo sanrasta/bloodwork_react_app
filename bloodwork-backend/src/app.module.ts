@@ -188,7 +188,7 @@ import { AppService } from './app.service';
         {
           rootPath: configService.get<string>('upload.path'),
           serveRoot: '/uploads',
-          exclude: ['/api*'], // Don't interfere with API routes
+          // exclude: ['/api/**'], // Temporarily removed to debug
         },
       ],
       inject: [ConfigService],
@@ -222,7 +222,7 @@ import { AppService } from './app.service';
      */
     AuthModule,
     UploadsModule,
-    AnalysisModule,
+    AnalysisModule, // Re-enabled to test
     ResultsModule,
   ],
 

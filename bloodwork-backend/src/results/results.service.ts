@@ -23,6 +23,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { BloodworkResult, TestResult } from '../common/entities/bloodwork-result.entity';
 import { AiRecommendationsService } from './ai-recommendations.service';
+import { ApiResponseDto, createApiResponse } from '../common/dto/api-response.dto';
 
 /**
  * Result statistics interface for frontend consumption
@@ -102,7 +103,7 @@ export class ResultsService {
    * 
    * USAGE: GET /results/:resultId endpoint calls this method
    */
-  async findByIdWithEnhancements(id: string, userId: string): Promise<EnhancedBloodworkResult> {
+  async findByIdWithEnhancements(id: string, userId: string): Promise<ApiResponseDto<EnhancedBloodworkResult>> {
     const result = await this.resultRepository.findOne({ where: { id, userId } });
     
     if (!result) {
@@ -118,32 +119,26 @@ export class ResultsService {
       test.status === 'high' || test.status === 'low'
     );
 
-    // Generate AI-powered recommendations based on complete analysis
-    const aiRecommendations = await this.aiRecommendationsService.generateRecommendations({
-      testResults: result.results,
-      testType: result.testType,
-      testDate: result.testDate,
-      // TODO: Add patient context when available
-      // patientContext: {
-      //   age: patientAge,
-      //   gender: patientGender,
-      //   medicalHistory: patientHistory,
-      // }
-    });
+    // AI recommendations are now generated per-test in the analysis processor
+    // const aiRecommendations = await this.aiRecommendationsService.generateRecommendations({
+    //   testResults: result.results,
+    //   testType: result.testType,
+    //   testDate: result.testDate,
+    // });
 
-    return {
+    return createApiResponse({
       ...result,
       statistics,
       criticalTests,
       abnormalTests,
-      recommendations: aiRecommendations.recommendations,
+      recommendations: [], // AI insights are now embedded in each test result
       aiInsights: {
-        severity: aiRecommendations.severity,
-        followUpTimeframe: aiRecommendations.followUpTimeframe,
-        keyFindings: aiRecommendations.keyFindings,
-        medicalDisclaimer: aiRecommendations.medicalDisclaimer,
+        severity: 'medium',
+        followUpTimeframe: '1-2 weeks',
+        keyFindings: criticalTests.length > 0 ? ['Critical values detected'] : ['Results within expected ranges'],
+        medicalDisclaimer: 'This analysis is for informational purposes only. Consult your healthcare provider for medical advice.',
       },
-    };
+    });
   }
 
   /**

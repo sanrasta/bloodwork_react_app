@@ -25,6 +25,7 @@ import { Repository } from 'typeorm';
 import type { Queue } from 'bull';
 import { AnalysisJob, JobStatus } from '../common/entities/analysis-job.entity';
 import { AnalysisJobResponseDto } from '../common/dto/analysis-job-response.dto';
+import { ApiResponseDto, createApiResponse } from '../common/dto/api-response.dto';
 import { UploadsService } from '../uploads/uploads.service';
 
 @Injectable()
@@ -50,7 +51,7 @@ export class AnalysisService {
    * 3. Add job to Bull queue for background processing
    * 4. Return job details for React Native polling
    */
-  async startAnalysis(uploadId: string, userId: string): Promise<AnalysisJobResponseDto> {
+  async startAnalysis(uploadId: string, userId: string): Promise<ApiResponseDto<AnalysisJobResponseDto>> {
     // Verify upload exists and file is accessible for this user
     const upload = await this.uploadsService.findByIdWithFileCheck(uploadId, userId);
     
@@ -85,7 +86,7 @@ export class AnalysisService {
     });
 
     // Format response for React Native
-    return this.formatJobResponse(savedJob);
+    return createApiResponse(this.formatJobResponse(savedJob));
   }
 
   /**
@@ -99,14 +100,14 @@ export class AnalysisService {
    * React Native timer -> GET /analysis/:jobId -> This method -> Updated status
    * Progress bar updates, status changes, completion detection
    */
-  async getJobStatus(jobId: string, userId: string): Promise<AnalysisJobResponseDto> {
+  async getJobStatus(jobId: string, userId: string): Promise<ApiResponseDto<AnalysisJobResponseDto>> {
     const job = await this.jobRepository.findOne({ where: { id: jobId, userId } });
     
     if (!job) {
       throw new NotFoundException(`Analysis job ${jobId} not found`);
     }
 
-    return this.formatJobResponse(job);
+    return createApiResponse(this.formatJobResponse(job));
   }
 
   /**
