@@ -18,7 +18,7 @@
  * This module completes the full analysis pipeline your app depends on
  */
 
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ResultsController } from './results.controller';
 import { ResultsService } from './results.service';
@@ -95,7 +95,7 @@ import { BloodworkResult } from '../common/entities/bloodwork-result.entity';
    * - Future modules could access results for analytics
    * - Admin modules could use results for monitoring
    */
-  exports: [ResultsService],
+  exports: [ResultsService, AiRecommendationsService],
 })
 export class ResultsModule {
   /**
