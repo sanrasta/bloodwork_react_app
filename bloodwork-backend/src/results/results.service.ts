@@ -23,7 +23,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { BloodworkResult, TestResult } from '../common/entities/bloodwork-result.entity';
 import { AiRecommendationsService } from './ai-recommendations.service';
-import { ApiResponseDto, createApiResponse } from '../common/dto/api-response.dto';
+import { ApiEnvelope, createApiEnvelope } from '../common/responses';
 
 /**
  * Result statistics interface for frontend consumption
@@ -103,7 +103,7 @@ export class ResultsService {
    * 
    * USAGE: GET /results/:resultId endpoint calls this method
    */
-  async findByIdWithEnhancements(id: string, userId: string): Promise<ApiResponseDto<EnhancedBloodworkResult>> {
+  async findByIdWithEnhancements(id: string, userId: string): Promise<ApiEnvelope<EnhancedBloodworkResult>> {
     const result = await this.resultRepository.findOne({ where: { id, userId } });
     
     if (!result) {
@@ -126,7 +126,7 @@ export class ResultsService {
     //   testDate: result.testDate,
     // });
 
-    return createApiResponse({
+    const enhancedResult: EnhancedBloodworkResult = {
       ...result,
       statistics,
       criticalTests,
@@ -138,7 +138,9 @@ export class ResultsService {
         keyFindings: criticalTests.length > 0 ? ['Critical values detected'] : ['Results within expected ranges'],
         medicalDisclaimer: 'This analysis is for informational purposes only. Consult your healthcare provider for medical advice.',
       },
-    });
+    };
+
+    return createApiEnvelope(enhancedResult);
   }
 
   /**

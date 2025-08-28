@@ -29,12 +29,12 @@ import {
 import {
   ApiTags,
   ApiOperation,
-  ApiResponse,
+  ApiResponse as SwaggerApiResponse,
   ApiParam,
   ApiQuery,
 } from '@nestjs/swagger';
 import { ResultsService, EnhancedBloodworkResult } from './results.service';
-import { ApiResponseDto } from '../common/dto/api-response.dto';
+import { ApiEnvelope } from '../common/responses';
 import { BloodworkResult } from '../common/entities/bloodwork-result.entity';
 import { ClerkAuthGuard, CurrentUser, Public } from '../auth';
 
@@ -73,7 +73,7 @@ export class ResultsController {
     description: 'UUID of the analysis result',
     example: 'c3d4e5f6-g7h8-9012-cdef-345678901234',
   })
-  @ApiResponse({
+  @SwaggerApiResponse({
     status: 200,
     description: 'Result retrieved successfully with enhancements',
     schema: {
@@ -120,14 +120,14 @@ export class ResultsController {
       },
     },
   })
-  @ApiResponse({
+  @SwaggerApiResponse({
     status: 404,
     description: 'Result not found',
   })
   async getResult(
     @Param('resultId', ParseUUIDPipe) resultId: string,
     // @CurrentUser() userId: string, // Temporarily disabled for testing
-  ): Promise<ApiResponseDto<EnhancedBloodworkResult>> {
+  ): Promise<ApiEnvelope<EnhancedBloodworkResult>> {
     /**
      * Delegate to service for enhanced data retrieval
      * 
@@ -158,11 +158,11 @@ export class ResultsController {
     name: 'resultId',
     description: 'UUID of the analysis result',
   })
-  @ApiResponse({
+  @SwaggerApiResponse({
     status: 200,
     description: 'Raw result data retrieved successfully',
   })
-  @ApiResponse({
+  @SwaggerApiResponse({
     status: 404,
     description: 'Result not found',
   })
@@ -209,7 +209,7 @@ export class ResultsController {
     required: false,
     example: 50,
   })
-  @ApiResponse({
+  @SwaggerApiResponse({
     status: 200,
     description: 'Results retrieved successfully',
     type: [BloodworkResult],
@@ -251,7 +251,7 @@ export class ResultsController {
     summary: 'Get system-wide result statistics',
     description: 'Retrieves aggregate statistics about all bloodwork results in the system. Useful for monitoring and analytics.',
   })
-  @ApiResponse({
+  @SwaggerApiResponse({
     status: 200,
     description: 'System statistics retrieved successfully',
     schema: {
@@ -290,7 +290,7 @@ export class ResultsController {
     summary: 'Check results service health',
     description: 'Verifies results service is healthy and database is accessible.',
   })
-  @ApiResponse({
+  @SwaggerApiResponse({
     status: 200,
     description: 'Service health information',
   })

@@ -1,7 +1,7 @@
 /**
- * Upload Response DTO - Contract for file upload response
+ * Upload Response - Contract for file upload response
  * 
- * WHY: This DTO ensures your React Native app receives exactly the data
+ * WHY: This response ensures your React Native app receives exactly the data
  * it expects from the upload endpoint. It matches the UploadResponse interface
  * in your frontend types/types.ts file.
  * 
@@ -14,11 +14,15 @@
  * RELATIONSHIP TO YOUR APP:
  * Your uploadPdf API function expects this exact response format
  * UploadCard component uses uploadId to trigger analysis
+ * 
+ * NAMING CONVENTION:
+ * - This is output data (response to user) → "Response" suffix
+ * - Input data (from user) uses "Dto" suffix
  */
 
 import { ApiProperty } from '@nestjs/swagger';
 
-export class UploadResponseDto {
+export class UploadResponse {
   /**
    * Unique identifier for the uploaded file
    * This is the UUID from the Upload entity

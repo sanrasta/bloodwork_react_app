@@ -18,7 +18,7 @@
  * React Native polling -> AnalysisController -> Real-time status updates
  */
 
-import { Module, forwardRef } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BullModule } from '@nestjs/bull';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -93,7 +93,7 @@ import { ResultsModule } from '../results/results.module';
      * that React Native will display. This completes the full pipeline:
      * Upload → Analysis → Results → Display
      * 
-     * Using direct import instead of forwardRef to avoid circular dependency
+     * Direct import is safe because ResultsModule has no dependencies back to AnalysisModule
      */
     ResultsModule,
   ],

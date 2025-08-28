@@ -275,8 +275,8 @@ export class AppModule {
    * before accepting requests from your React Native app.
    */
   async onModuleInit() {
-    const env = this.configService.get<string>('app.env');
-    const port = this.configService.get<number>('app.port');
+    const env = this.configService.get<string>('NODE_ENV') || 'development';
+    const port = this.configService.get<number>('port');
     
     console.log(`🩸 Bloodwork Analysis API`);
     console.log(`🌍 Environment: ${env}`);

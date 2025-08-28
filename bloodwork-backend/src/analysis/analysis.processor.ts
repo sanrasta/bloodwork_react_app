@@ -12,17 +12,7 @@ import { AnalysisService } from './analysis.service';
 import { ResultsService } from '../results/results.service';
 import { PdfParserService } from './pdf-parser.service';
 import { JobStatus } from '../common/entities/analysis-job.entity';
-
-/**
- * Job data interface for type safety
- */
-interface BloodworkJobData {
-  jobId: string;
-  userId: string;
-  uploadId: string;
-  filePath: string;
-  originalName: string;
-}
+import { BloodworkJobData } from './types';
 
 @Injectable()
 @Processor('bloodwork-analysis')
@@ -47,13 +37,11 @@ export class AnalysisProcessor {
     try {
       // Phase 1: Initialize
       await this.updateJobProgress(jobId, JobStatus.RUNNING, 10);
-      await this.delay(1000);
 
       // Phase 2: Parse PDF
       this.logger.log(`Parsing PDF for job ${jobId}`);
       await this.updateJobProgress(jobId, JobStatus.RUNNING, 30);
       const parsedData = await this.pdfParserService.parseBloodworkResults(filePath);
-      await this.delay(2000);
 
       // Phase 3: Process results
       this.logger.log(`Processing results for job ${jobId}`);
@@ -102,12 +90,5 @@ export class AnalysisProcessor {
   private async updateJobProgress(jobId: string, status: JobStatus, progress: number): Promise<void> {
     await this.analysisService.updateJobStatus(jobId, { status, progress });
     this.logger.debug(`Job ${jobId} progress: ${progress}%`);
-  }
-
-  /**
-   * Simple delay helper
-   */
-  private async delay(ms: number): Promise<void> {
-    await new Promise(resolve => setTimeout(resolve, ms));
   }
 }

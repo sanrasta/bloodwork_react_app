@@ -14,7 +14,7 @@
  * 
  * RELATIONSHIP TO YOUR APP:
  * React Native UploadCard -> FormData with PDF -> POST /uploads -> This controller
- * Controller -> UploadsService -> Database -> Returns UploadResponseDto
+ * Controller -> UploadsService -> Database -> Returns UploadResponse
  * React Native receives { uploadId, fileUrl } -> Stores in Zustand -> Triggers analysis
  */
 
@@ -30,13 +30,12 @@ import {
   Get,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags, ApiOperation, ApiResponse, ApiConsumes } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse as SwaggerApiResponse, ApiConsumes } from '@nestjs/swagger';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { UploadsService } from './uploads.service';
-import { UploadResponseDto } from '../common/dto/upload-response.dto';
-import { ApiResponseDto } from '../common/dto/api-response.dto';
+import { UploadResponse, ApiEnvelope } from '../common/responses';
 import { ConfigService } from '@nestjs/config';
 import { ClerkAuthGuard, CurrentUser, Public } from '../auth';
 
@@ -70,16 +69,16 @@ export class UploadsController {
     description: 'Accepts PDF files for bloodwork analysis. Returns upload ID for subsequent analysis requests.',
   })
   @ApiConsumes('multipart/form-data')
-  @ApiResponse({
+  @SwaggerApiResponse({
     status: 201,
     description: 'File uploaded successfully',
-    type: ApiResponseDto,
+    type: UploadResponse,
   })
-  @ApiResponse({
+  @SwaggerApiResponse({
     status: 400,
     description: 'Invalid file type, size, or format',
   })
-  @ApiResponse({
+  @SwaggerApiResponse({
     status: 413,
     description: 'File size exceeds maximum limit',
   })
@@ -126,10 +125,20 @@ export class UploadsController {
      * provides additional type and size validation with specific
      * error messages that your React Native app can display.
      */
-    @UploadedFile()
+    @UploadedFile(
+      new ParseFilePipeBuilder()
+        .addMaxSizeValidator({ 
+          maxSize: 10 * 1024 * 1024, // 10MB - explicit validation layer
+          message: 'File size must not exceed 10MB'
+        })
+        .build({ 
+          errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+          exceptionFactory: (error) => new BadRequestException(`Upload validation failed: ${error}`)
+        })
+    )
     file: Express.Multer.File,
     // @CurrentUser() userId: string, // Temporarily disabled for testing
-  ): Promise<ApiResponseDto<UploadResponseDto>> {
+  ): Promise<ApiEnvelope<UploadResponse>> {
     /**
      * Delegate to service layer for business logic
      * 
@@ -154,7 +163,7 @@ export class UploadsController {
     summary: 'Check upload service health',
     description: 'Verifies upload service is available and properly configured.',
   })
-  @ApiResponse({
+  @SwaggerApiResponse({
     status: 200,
     description: 'Upload service is healthy',
   })

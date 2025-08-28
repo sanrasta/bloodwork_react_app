@@ -32,14 +32,13 @@ import {
 import {
   ApiTags,
   ApiOperation,
-  ApiResponse,
+  ApiResponse as SwaggerApiResponse,
   ApiParam,
   ApiQuery,
 } from '@nestjs/swagger';
 import { AnalysisService } from './analysis.service';
 import { CreateAnalysisDto } from '../common/dto/create-analysis.dto';
-import { AnalysisJobResponseDto } from '../common/dto/analysis-job-response.dto';
-import { ApiResponseDto } from '../common/dto/api-response.dto';
+import { AnalysisJobResponse, ApiEnvelope } from '../common/responses';
 import { JobStatus } from '../common/entities/analysis-job.entity';
 import { ClerkAuthGuard, CurrentUser, Public } from '../auth';
 
@@ -70,23 +69,23 @@ export class AnalysisController {
     summary: 'Start bloodwork analysis',
     description: 'Creates a new analysis job for the specified upload. The job will be queued for background processing.',
   })
-  @ApiResponse({
+  @SwaggerApiResponse({
     status: 201,
     description: 'Analysis job created successfully',
-    type: AnalysisJobResponseDto,
+    type: AnalysisJobResponse,
   })
-  @ApiResponse({
+  @SwaggerApiResponse({
     status: 400,
     description: 'Invalid uploadId or upload not found',
   })
-  @ApiResponse({
+  @SwaggerApiResponse({
     status: 409,
     description: 'Analysis job already exists for this upload',
   })
   async createAnalysisJob(
     @Body() createAnalysisDto: CreateAnalysisDto,
     // @CurrentUser() userId: string, // Temporarily disabled for testing
-  ): Promise<ApiResponseDto<AnalysisJobResponseDto>> {
+  ): Promise<ApiEnvelope<AnalysisJobResponse>> {
     /**
      * Delegate to service layer for business logic
      * 
@@ -95,7 +94,7 @@ export class AnalysisController {
      * This separation enables testing and code reuse.
      */
     const userId = 'test-user-id'; // Temporary for testing
-    return this.analysisService.startAnalysis(createAnalysisDto.uploadId, userId);
+    return this.analysisService.startAnalysis(createAnalysisDto, userId);
   }
 
   /**
@@ -123,19 +122,19 @@ export class AnalysisController {
     description: 'UUID of the analysis job',
     example: 'b2c3d4e5-f6g7-8901-bcde-f23456789012',
   })
-  @ApiResponse({
+  @SwaggerApiResponse({
     status: 200,
     description: 'Job status retrieved successfully',
-    type: AnalysisJobResponseDto,
+    type: AnalysisJobResponse,
   })
-  @ApiResponse({
+  @SwaggerApiResponse({
     status: 404,
     description: 'Job not found',
   })
   async getAnalysisStatus(
     @Param('jobId', ParseUUIDPipe) jobId: string,
     // @CurrentUser() userId: string, // Temporarily disabled for testing
-  ): Promise<ApiResponseDto<AnalysisJobResponseDto>> {
+  ): Promise<ApiEnvelope<AnalysisJobResponse>> {
     /**
      * Simple delegation to service layer
      * 
@@ -169,15 +168,15 @@ export class AnalysisController {
     name: 'jobId',
     description: 'UUID of the analysis job to cancel',
   })
-  @ApiResponse({
+  @SwaggerApiResponse({
     status: 204,
     description: 'Job cancelled successfully',
   })
-  @ApiResponse({
+  @SwaggerApiResponse({
     status: 404,
     description: 'Job not found',
   })
-  @ApiResponse({
+  @SwaggerApiResponse({
     status: 400,
     description: 'Job cannot be cancelled (already completed or failed)',
   })
@@ -214,15 +213,15 @@ export class AnalysisController {
     required: false,
     example: 50,
   })
-  @ApiResponse({
+  @SwaggerApiResponse({
     status: 200,
     description: 'Jobs retrieved successfully',
-    type: [AnalysisJobResponseDto],
+    type: [AnalysisJobResponse],
   })
   async getJobs(
     @Query('status') status?: JobStatus,
     @Query('limit') limit?: number,
-  ): Promise<AnalysisJobResponseDto[]> {
+  ): Promise<AnalysisJobResponse[]> {
     /**
      * Conditional logic based on query parameters
      * 
@@ -273,7 +272,7 @@ export class AnalysisController {
     summary: 'Check analysis service health',
     description: 'Verifies analysis service is healthy and ready to process jobs.',
   })
-  @ApiResponse({
+  @SwaggerApiResponse({
     status: 200,
     description: 'Service health information',
   })

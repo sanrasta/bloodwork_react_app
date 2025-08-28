@@ -24,8 +24,8 @@ import { InjectQueue } from '@nestjs/bull';
 import { Repository } from 'typeorm';
 import type { Queue } from 'bull';
 import { AnalysisJob, JobStatus } from '../common/entities/analysis-job.entity';
-import { AnalysisJobResponseDto } from '../common/dto/analysis-job-response.dto';
-import { ApiResponseDto, createApiResponse } from '../common/dto/api-response.dto';
+import { AnalysisJobResponse, ApiEnvelope, createApiEnvelope } from '../common/responses';
+import { CreateAnalysisDto } from '../common/dto/create-analysis.dto';
 import { UploadsService } from '../uploads/uploads.service';
 
 @Injectable()
@@ -51,25 +51,25 @@ export class AnalysisService {
    * 3. Add job to Bull queue for background processing
    * 4. Return job details for React Native polling
    */
-  async startAnalysis(uploadId: string, userId: string): Promise<ApiResponseDto<AnalysisJobResponseDto>> {
+  async startAnalysis(createAnalysisDto: CreateAnalysisDto, userId: string): Promise<ApiEnvelope<AnalysisJobResponse>> {
     // Verify upload exists and file is accessible for this user
-    const upload = await this.uploadsService.findByIdWithFileCheck(uploadId, userId);
+    const upload = await this.uploadsService.findByIdWithFileCheck(createAnalysisDto.uploadId, userId);
     
     // Check if analysis already exists for this upload
     const existingJob = await this.jobRepository.findOne({
-      where: { uploadId, userId, status: JobStatus.QUEUED },
+      where: { uploadId: createAnalysisDto.uploadId, userId, status: JobStatus.QUEUED },
     });
     
     if (existingJob) {
       throw new BadRequestException(
-        `Analysis job already exists for upload ${uploadId}`
+        `Analysis job already exists for upload ${createAnalysisDto.uploadId}`
       );
     }
 
     // Create job record in database
     const job = this.jobRepository.create({
       userId,
-      uploadId,
+      uploadId: createAnalysisDto.uploadId,
       status: JobStatus.QUEUED,
       progress: 0,
     });
@@ -80,13 +80,13 @@ export class AnalysisService {
     await this.analysisQueue.add('processBloodwork', {
       jobId: savedJob.id,
       userId,
-      uploadId,
+      uploadId: createAnalysisDto.uploadId,
       filePath: upload.path,
       originalName: upload.originalName,
     });
 
     // Format response for React Native
-    return createApiResponse(this.formatJobResponse(savedJob));
+    return createApiEnvelope(this.formatJobResponse(savedJob));
   }
 
   /**
@@ -100,14 +100,14 @@ export class AnalysisService {
    * React Native timer -> GET /analysis/:jobId -> This method -> Updated status
    * Progress bar updates, status changes, completion detection
    */
-  async getJobStatus(jobId: string, userId: string): Promise<ApiResponseDto<AnalysisJobResponseDto>> {
+  async getJobStatus(jobId: string, userId: string): Promise<ApiEnvelope<AnalysisJobResponse>> {
     const job = await this.jobRepository.findOne({ where: { id: jobId, userId } });
     
     if (!job) {
       throw new NotFoundException(`Analysis job ${jobId} not found`);
     }
 
-    return createApiResponse(this.formatJobResponse(job));
+    return createApiEnvelope(this.formatJobResponse(job));
   }
 
   /**
@@ -226,7 +226,7 @@ export class AnalysisService {
    * consistent API responses that match your React Native
    * useAnalysisJob hook expectations.
    */
-  private formatJobResponse(job: AnalysisJob): AnalysisJobResponseDto {
+  private formatJobResponse(job: AnalysisJob): AnalysisJobResponse {
     return {
       jobId: job.id,
       status: job.status,

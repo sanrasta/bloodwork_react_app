@@ -18,7 +18,7 @@
  * This module completes the full analysis pipeline your app depends on
  */
 
-import { Module, forwardRef } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ResultsController } from './results.controller';
 import { ResultsService } from './results.service';

@@ -1,7 +1,7 @@
 /**
- * Analysis Job Response DTO - Contract for job status responses
+ * Analysis Job Response - Contract for job status responses
  * 
- * WHY: This DTO standardizes the response format for both job creation
+ * WHY: This response standardizes the format for both job creation
  * (POST /analysis) and job status polling (GET /analysis/:jobId).
  * Your React Native useAnalysisJob hook depends on this exact structure.
  * 
@@ -15,12 +15,16 @@
  * useAnalysisJob hook expects this format for polling
  * AnalysisProgress component reads status and progress
  * ResultSummary gets resultId from completed jobs
+ * 
+ * NAMING CONVENTION:
+ * - This is output data (response to user) → "Response" suffix
+ * - Input data (from user) uses "Dto" suffix
  */
 
 import { ApiProperty } from '@nestjs/swagger';
 import { JobStatus } from '../entities/analysis-job.entity';
 
-export class AnalysisJobResponseDto {
+export class AnalysisJobResponse {
   /**
    * Unique identifier for the analysis job
    * Used by your React Native app for polling status

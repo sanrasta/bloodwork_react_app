@@ -23,8 +23,7 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Upload } from '../common/entities/upload.entity';
-import { UploadResponseDto } from '../common/dto/upload-response.dto';
-import { ApiResponseDto, createApiResponse } from '../common/dto/api-response.dto';
+import { UploadResponse, ApiEnvelope, createApiEnvelope } from '../common/responses';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
@@ -47,7 +46,7 @@ export class UploadsService {
    * 2. Creates database record with metadata
    * 3. Returns structured response for React Native
    */
-  async saveUpload(file: Express.Multer.File, userId: string): Promise<ApiResponseDto<UploadResponseDto>> {
+  async saveUpload(file: Express.Multer.File, userId: string): Promise<ApiEnvelope<UploadResponse>> {
     // Business validation beyond multer's basic checks
     this.validateUploadedFile(file);
 
@@ -65,7 +64,7 @@ export class UploadsService {
     const savedUpload = await this.uploadRepository.save(upload);
 
     // Format response for React Native app
-    return createApiResponse({
+    return createApiEnvelope({
       uploadId: savedUpload.id,      // UUID that your app will use for analysis
       fileUrl: `uploads/${savedUpload.filename}`, // Relative path for future access
     });
