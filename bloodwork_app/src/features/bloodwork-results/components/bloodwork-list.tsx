@@ -11,7 +11,11 @@ interface BloodworkListProps {
 }
 
 export default function BloodworkList({ onSelectResult }: BloodworkListProps) {
+  // ✅ Already optimized - selective subscription to only filters
   const filters = useBloodworkStore((state) => state.filters);
+  
+  // 📊 Performance monitoring (temporary)
+  console.log('🔄 BloodworkList re-render - filters:', filters);
   
   // 1. Fetch Data
   const { data: results, isLoading, isError, error } = useGetBloodworkResults(filters);

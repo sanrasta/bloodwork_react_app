@@ -4,16 +4,21 @@ import { useBloodworkStore } from '../store/use-bloodwork-store';
 import { useAnalysisJob } from '../hooks/use-analysis-job';
 
 export default function AnalysisProgress() {
-  const { 
-    step, 
-    jobId, 
-    setStep, 
-    setResultId, 
-    setError, 
-    resetFlow 
-  } = useBloodworkStore();
+  // ✅ TIER 1: Selective Subscriptions - Only re-render when these specific values change
+  const step = useBloodworkStore(state => state.step);
+  const jobId = useBloodworkStore(state => state.jobId);
+  const error = useBloodworkStore(state => state.error);
   
-  const { data: job, isLoading, isError, error } = useAnalysisJob(jobId);
+  // ✅ Actions are stable - won't cause re-renders when store updates
+  const setStep = useBloodworkStore(state => state.setStep);
+  const setResultId = useBloodworkStore(state => state.setResultId);
+  const setError = useBloodworkStore(state => state.setError);
+  const resetFlow = useBloodworkStore(state => state.resetFlow);
+  
+  // 📊 Performance monitoring (temporary)
+  console.log('🔄 AnalysisProgress re-render - step:', step, 'jobId:', jobId, 'hasError:', !!error);
+  
+  const { data: job, isLoading, isError, error: queryError } = useAnalysisJob(jobId);
 
   // Update store based on job status
   useEffect(() => {
@@ -36,11 +41,11 @@ export default function AnalysisProgress() {
 
   // Handle error from query
   useEffect(() => {
-    if (isError && error) {
-      setError(error.message || 'Failed to fetch job status');
+    if (isError && queryError) {
+      setError(queryError.message || 'Failed to fetch job status');
       setStep('failed');
     }
-  }, [isError, error, setError, setStep]);
+  }, [isError, queryError, setError, setStep]);
 
   if (step === 'uploaded') {
     return (

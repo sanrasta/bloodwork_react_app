@@ -1,20 +1,22 @@
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@clerk/clerk-expo';
-import { getResult } from '../api/bloodwork-api';
+import { analysisResultOptions } from '../lib/analysis-job.options';
 
+/**
+ * Hook for querying bloodwork analysis results
+ * 
+ * Features:
+ * - Uses reusable query options for consistency with prefetching
+ * - Benefits from prefetched data when coming from completed analysis
+ * - Type-safe cache management
+ * - Proper error handling and retry logic
+ */
 export const useResultQuery = (resultId: string | undefined) => {
   const { getToken } = useAuth();
   
+  // Always call hooks in the same order
   return useQuery({
-    queryKey: ['bloodwork-result', resultId],
-    queryFn: async () => {
-      // Temporarily bypass auth for testing
-      const token = 'dummy-token'; // Backend auth is disabled
-      return getResult(token, resultId!);
-    },
-    select: (response) => response.data,
+    ...analysisResultOptions('dummy-token', resultId || 'disabled'),
     enabled: !!resultId,
-    staleTime: 10 * 60 * 1000, // Consider fresh for 10 minutes
-    gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
   });
 };

@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
-import { useBloodworkStore } from '../store/use-bloodwork-store';
+import { useUploadFlow } from '../hooks/flows/use-upload-flow';
 import { useUploadMutation } from '../hooks/use-upload-mutation';
 import { useStartAnalysis } from '../hooks/use-start-analysis';
 
@@ -9,16 +9,25 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 export default function UploadCard() {
   const [isProcessing, setIsProcessing] = useState(false);
+  
+  // ✅ TIER 2: Custom Hook - Clean, selective subscriptions with computed values
   const { 
     step, 
     pickedFile, 
+    error, // Available for future error display UI
+    hasFile, 
+    hasError,
     setStep, 
     setPickedFile, 
     setUploadId, 
     setJobId, 
     setError 
-  } = useBloodworkStore();
-  //subscribes to ALL store changes
+  } = useUploadFlow();
+  
+  // 📊 Performance monitoring - validate no regressions
+  useEffect(() => { 
+    console.log('🔄 UploadCard render - step:', step, 'hasFile:', hasFile, 'hasError:', hasError);
+  });
   
   const uploadMutation = useUploadMutation();
   const startAnalysisMutation = useStartAnalysis();

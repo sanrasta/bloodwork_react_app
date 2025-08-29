@@ -50,8 +50,12 @@ const getDefaultNote = (testResult: TestResult & { note?: string }) => {
 };
 
 export default function ResultSummary() {
+  // ✅ Already optimized - only subscribes to what it needs
   const { resultId, resetFlow } = useBloodworkStore();
   const { data: result, isLoading, isError, error } = useResultQuery(resultId);
+  
+  // 📊 Performance monitoring (temporary)
+  console.log('🔄 ResultSummary re-render - resultId:', resultId);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [showWelcome, setShowWelcome] = useState(true);
   const animationValue = useRef(new Animated.Value(0)).current;

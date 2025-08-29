@@ -4,17 +4,24 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ClerkProvider } from '@clerk/clerk-expo';
+import { useEffect } from 'react';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { queryClient } from '../src/lib/query-client';
 import { tokenCache } from '../src/lib/clerk-token-cache';
+import { initializeReactQueryRNIntegration } from '../src/lib/react-query-rn-integration';
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
+
+  // Initialize React Query RN integration on app startup
+  useEffect(() => {
+    initializeReactQueryRNIntegration();
+  }, []);
 
   if (!loaded) {
     // Async font loading only occurs in development.

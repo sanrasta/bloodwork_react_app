@@ -32,10 +32,9 @@ export interface BloodworkFilters {
 }
 
 export interface BloodworkListState {
-  results: BloodworkResult[];
+  // ✅ CLIENT/UI STATE ONLY
   filters: BloodworkFilters;
-  selectedResult: BloodworkResult | null;
-  isLoading: boolean;
+  selectedResultId: string | null; // Store only ID to avoid staleness
 }
 
 // === MVP TYPES ===
