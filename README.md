@@ -1,8 +1,3 @@
-That’s a great nuance—if the senior dev is both mentor and friend, you want the README to stay professional, but also warm, approachable, and a little playful. It should signal competence while keeping the tone trust-based and human, not corporate.
-
-Here’s how I’d rewrite it with that balance:
-
-⸻
 
 Bloodwork Analysis Platform
 
@@ -125,7 +120,3 @@ GET  /api/health        # Health check
 
 ⸻
 
-🤝 Contributing
-	•	Branch → PR → main (no cowboy commits, even if we trust each other)
-	•	Use Conventional Commits (helps with clean history + release notes)
-	•	Code style: TypeScript strict mode enforced
