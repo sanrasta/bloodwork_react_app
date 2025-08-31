@@ -6,6 +6,19 @@ export const createAuthenticatedApiCall = <T extends any[], R>(
   apiFunction: (...args: [...T, authToken?: string]) => Promise<R>
 ) => {
   return async (authToken: string, ...args: T): Promise<R> => {
+    // For post/put methods, we need to handle the options parameter correctly
+    // The signature is: (endpoint, data, options?, authToken?)
+    // We need to insert undefined for options when not provided
+    if (args.length === 2) {
+      // post(endpoint, data) -> post(endpoint, data, undefined, authToken)
+      return (apiFunction as any)(args[0], args[1], undefined, authToken);
+    }
+    // For get/delete methods with single endpoint parameter
+    // The signature is: (endpoint, options?, authToken?)
+    if (args.length === 1) {
+      // get(endpoint) -> get(endpoint, undefined, authToken)
+      return (apiFunction as any)(args[0], undefined, authToken);
+    }
     return apiFunction(...args, authToken);
   };
 };
@@ -34,9 +47,6 @@ export const uploadWithAuth = async (
 ): Promise<ApiResponse<any>> => {
   const baseUrl = getUploadBaseUrl();
   const fullUrl = `${baseUrl}${endpoint}`;
-  
-  console.log('🔍 [DEBUG] Upload URL:', fullUrl);
-  console.log('🔍 [DEBUG] Auth token:', authToken);
   
   const response = await fetch(fullUrl, {
     method: 'POST',

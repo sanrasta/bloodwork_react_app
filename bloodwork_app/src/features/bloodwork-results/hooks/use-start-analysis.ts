@@ -19,8 +19,11 @@ export const useStartAnalysis = () => {
   return useMutation({
     mutationKey: ['start-analysis'], // Consistent mutation identification
     mutationFn: async (uploadId: string) => {
-      // Temporarily bypass auth for testing
-      const token = 'dummy-token'; // Backend auth is disabled
+      // Get fresh Clerk token
+      const token = await getToken();
+      if (!token) {
+        throw new Error('Authentication required. Please sign in.');
+      }
       reactQueryLogger.mutation('Starting analysis for upload:', uploadId);
       return startAnalysis(token, uploadId);
     },

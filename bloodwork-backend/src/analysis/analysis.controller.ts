@@ -44,7 +44,7 @@ import { ClerkAuthGuard, CurrentUser, Public } from '../auth';
 
 @ApiTags('analysis')
 @Controller('analysis')
-// @UseGuards(ClerkAuthGuard) // Temporarily disabled for testing
+@UseGuards(ClerkAuthGuard)
 export class AnalysisController {
   constructor(private readonly analysisService: AnalysisService) {}
 
@@ -84,7 +84,7 @@ export class AnalysisController {
   })
   async createAnalysisJob(
     @Body() createAnalysisDto: CreateAnalysisDto,
-    // @CurrentUser() userId: string, // Temporarily disabled for testing
+    @CurrentUser() userId: string,
   ): Promise<ApiEnvelope<AnalysisJobResponse>> {
     /**
      * Delegate to service layer for business logic
@@ -93,7 +93,6 @@ export class AnalysisController {
      * while the service handles business logic (job creation, queue management).
      * This separation enables testing and code reuse.
      */
-    const userId = 'test-user-id'; // Temporary for testing
     return this.analysisService.startAnalysis(createAnalysisDto, userId);
   }
 
@@ -133,7 +132,7 @@ export class AnalysisController {
   })
   async getAnalysisStatus(
     @Param('jobId', ParseUUIDPipe) jobId: string,
-    // @CurrentUser() userId: string, // Temporarily disabled for testing
+    @CurrentUser() userId: string,
   ): Promise<ApiEnvelope<AnalysisJobResponse>> {
     /**
      * Simple delegation to service layer
@@ -142,7 +141,6 @@ export class AnalysisController {
      * so it needs to be fast and lightweight. The service handles caching
      * and optimization concerns.
      */
-    const userId = 'test-user-id'; // Temporary for testing
     return this.analysisService.getJobStatus(jobId, userId);
   }
 

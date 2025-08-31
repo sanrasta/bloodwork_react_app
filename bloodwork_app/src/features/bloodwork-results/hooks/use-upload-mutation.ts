@@ -5,7 +5,8 @@ import { invalidationHelpers } from '../lib/query-keys';
 import { reactQueryLogger } from '../../../shared/utils/logger';
 
 /**
- * Hook for uploading PDF files with proper cache invalidation
+ *
+ *  Hook for uploading PDF files with proper cache invalidation
  * 
  * Features:
  * - Type-safe query key invalidation
@@ -19,9 +20,12 @@ export const useUploadMutation = () => {
   return useMutation({
     mutationKey: ['upload'], // Consistent mutation identification
     mutationFn: async (formData: FormData) => {
-      // Temporarily bypass auth for testing
-      const token = 'dummy-token'; // Backend auth is disabled
-      reactQueryLogger.mutation('Starting PDF upload...');
+      // Get fresh Clerk token
+      const token = await getToken();
+      if (!token) {
+        throw new Error('Authentication required. Please sign in.');
+      }
+      reactQueryLogger.mutation('Starting PDF upload with auth token...');
       return uploadPdf(token, formData);
     },
     onSuccess: (data) => {

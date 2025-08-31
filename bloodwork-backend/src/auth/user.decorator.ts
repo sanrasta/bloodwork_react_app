@@ -25,13 +25,30 @@ interface AuthenticatedRequest extends Request {
     userId: string;
     sessionId: string;
     claims: Record<string, any>;
-  };
+  } | (() => {
+    userId: string;
+    sessionId: string;
+    claims: Record<string, any>;
+  });
 }
 
 export const CurrentUser = createParamDecorator(
   (data: unknown, ctx: ExecutionContext): string => {
     const request = ctx.switchToHttp().getRequest<AuthenticatedRequest>();
-    return request.auth?.userId || '';
+    
+    if (!request.auth) {
+      return '';
+    }
+
+    // Handle both old and new Clerk auth formats
+    let authData;
+    if (typeof request.auth === 'function') {
+      authData = request.auth();
+    } else {
+      authData = request.auth;
+    }
+
+    return authData?.userId || '';
   },
 );
 

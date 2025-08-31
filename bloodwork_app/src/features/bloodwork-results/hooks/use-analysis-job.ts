@@ -25,8 +25,50 @@ export const useAnalysisJob = (jobId: string | undefined) => {
   
   // Always call hooks in the same order
   const query = useQuery({
-    ...analysisJobOptions('dummy-token', jobId || 'disabled'),
+    queryKey: bloodworkQueryKeys.analysisJob(jobId || 'disabled'),
+    queryFn: async () => {
+      const token = await getToken();
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+      return analysisJobOptions(token, jobId || 'disabled').queryFn();
+    },
     enabled: !!jobId,
+    // Copy other options from analysisJobOptions
+    refetchInterval: (query) => {
+      const { data, error, status } = query.state;
+      
+      if (error || status === 'error') {
+        reactQueryLogger.error('Stopping poll due to error:', error?.message);
+        return false;
+      }
+      
+      const isActiveJob = data?.status === 'running' || data?.status === 'queued';
+      const isInitialLoad = status === 'pending' && !data;
+      
+      if (isActiveJob || isInitialLoad) {
+        reactQueryLogger.polling('Continuing to poll - query status:', status, 'job status:', data?.status || 'loading');
+        return 2000;
+      } else {
+        reactQueryLogger.polling('Stopping poll - final status:', data?.status || 'unknown');
+        return false;
+      }
+    },
+    staleTime: 5_000,
+    retry: (failureCount, error) => {
+      reactQueryLogger.error('Retry attempt:', failureCount, 'Error:', error.message);
+      const errorStatus = 'status' in error ? (error.status as number) : undefined;
+      if (errorStatus === 401 || errorStatus === 403) {
+        reactQueryLogger.error('Authentication error - not retrying');
+        return false;
+      }
+      if (errorStatus && typeof errorStatus === 'number' && errorStatus >= 500) {
+        return failureCount < 5;
+      }
+      return failureCount < 3;
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    gcTime: 5 * 60 * 1000,
   });
   
   // Prefetch results when job completes (Pattern 5: Prefetching)
@@ -64,7 +106,18 @@ export const useAnalysisJob = (jobId: string | undefined) => {
       prefetchedResults.current.add(job.resultId);
       
       // Prefetch the result for instant "View Results" experience
-      queryClient.prefetchQuery(analysisResultOptions('dummy-token', job.resultId))
+      queryClient.prefetchQuery({
+        queryKey: bloodworkQueryKeys.result(job.resultId),
+        queryFn: async () => {
+          const token = await getToken();
+          if (!token) {
+            throw new Error('Authentication required');
+          }
+          return analysisResultOptions(token, job.resultId).queryFn();
+        },
+        staleTime: 10 * 60 * 1000,
+        gcTime: 30 * 60 * 1000,
+      })
         .then(() => {
           reactQueryLogger.cache('Result prefetched successfully for:', job.resultId);
         })

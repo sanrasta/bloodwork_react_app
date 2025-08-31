@@ -15,8 +15,7 @@ export default function AnalysisProgress() {
   const setError = useBloodworkStore(state => state.setError);
   const resetFlow = useBloodworkStore(state => state.resetFlow);
   
-  // 📊 Performance monitoring (temporary)
-  console.log('🔄 AnalysisProgress re-render - step:', step, 'jobId:', jobId, 'hasError:', !!error);
+
   
   const { data: job, isLoading, isError, error: queryError } = useAnalysisJob(jobId);
 
@@ -120,46 +119,48 @@ const styles = StyleSheet.create({
     margin: 16,
   },
   progressCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 24,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  errorCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#1a1a1a',
     borderRadius: 12,
     padding: 24,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#FEE2E2',
+    borderColor: '#2a2a2a',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 2,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  errorCard: {
+    backgroundColor: '#1a1a1a',
+    borderRadius: 12,
+    padding: 24,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#DC2626',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
     elevation: 5,
   },
   title: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#1F2937',
+    color: '#E5E5E5',
     marginTop: 16,
     marginBottom: 8,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 14,
-    color: '#6B7280',
+    color: '#9CA3AF',
     textAlign: 'center',
     marginBottom: 20,
     lineHeight: 20,
@@ -172,23 +173,23 @@ const styles = StyleSheet.create({
   progressBar: {
     width: '100%',
     height: 8,
-    backgroundColor: '#E5E7EB',
+    backgroundColor: '#2a2a2a',
     borderRadius: 4,
     marginBottom: 8,
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#10B981',
+    backgroundColor: '#DC2626',
     borderRadius: 4,
   },
   progressText: {
     fontSize: 12,
-    color: '#6B7280',
+    color: '#9CA3AF',
     fontWeight: '500',
   },
   timeEstimate: {
     fontSize: 12,
-    color: '#6B7280',
+    color: '#9CA3AF',
     textAlign: 'center',
   },
   errorIcon: {
@@ -202,7 +203,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   retryButton: {
-    backgroundColor: '#3B82F6',
+    backgroundColor: '#DC2626',
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,

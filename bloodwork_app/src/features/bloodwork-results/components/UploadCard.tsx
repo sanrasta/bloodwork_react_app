@@ -25,9 +25,7 @@ export default function UploadCard() {
   } = useUploadFlow();
   
   // 📊 Performance monitoring - validate no regressions
-  useEffect(() => { 
-    console.log('🔄 UploadCard render - step:', step, 'hasFile:', hasFile, 'hasError:', hasError);
-  });
+
   
   const uploadMutation = useUploadMutation();
   const startAnalysisMutation = useStartAnalysis();
@@ -196,43 +194,45 @@ const styles = StyleSheet.create({
     margin: 16,
   },
   uploadArea: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#1a1a1a',
     borderRadius: 12,
     padding: 24,
     borderWidth: 2,
-    borderColor: '#E2E8F0',
+    borderColor: '#2a2a2a',
     borderStyle: 'dashed',
     alignItems: 'center',
   },
   fileInfo: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#1a1a1a',
     borderRadius: 12,
     padding: 20,
+    borderWidth: 1,
+    borderColor: '#2a2a2a',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 2,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
     elevation: 5,
   },
   title: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#1F2937',
+    color: '#E5E5E5',
     marginBottom: 8,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 14,
-    color: '#6B7280',
+    color: '#9CA3AF',
     textAlign: 'center',
     marginBottom: 20,
     lineHeight: 20,
   },
   uploadButton: {
-    backgroundColor: '#3B82F6',
+    backgroundColor: '#DC2626',
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,
@@ -245,7 +245,7 @@ const styles = StyleSheet.create({
   },
   privacy: {
     fontSize: 12,
-    color: '#6B7280',
+    color: '#9CA3AF',
     textAlign: 'center',
     lineHeight: 16,
   },
@@ -256,20 +256,20 @@ const styles = StyleSheet.create({
   fileName: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#1F2937',
+    color: '#E5E5E5',
     marginBottom: 4,
     textAlign: 'center',
   },
   fileSize: {
     fontSize: 14,
-    color: '#6B7280',
+    color: '#9CA3AF',
   },
   buttonRow: {
     flexDirection: 'row',
     gap: 12,
   },
   primaryButton: {
-    backgroundColor: '#10B981',
+    backgroundColor: '#DC2626',
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 8,
@@ -282,19 +282,21 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   secondaryButton: {
-    backgroundColor: '#F3F4F6',
+    backgroundColor: '#2a2a2a',
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 8,
     flex: 1,
+    borderWidth: 1,
+    borderColor: '#404040',
   },
   secondaryButtonText: {
-    color: '#374151',
+    color: '#9CA3AF',
     fontSize: 16,
     fontWeight: '500',
     textAlign: 'center',
   },
   disabledButton: {
-    backgroundColor: '#9CA3AF',
+    backgroundColor: '#666666',
   },
 });

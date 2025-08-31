@@ -31,7 +31,11 @@ interface AuthenticatedRequest extends Request {
     userId: string;
     sessionId: string;
     claims: Record<string, any>;
-  };
+  } | (() => {
+    userId: string;
+    sessionId: string;
+    claims: Record<string, any>;
+  });
 }
 
 @Injectable()
@@ -52,10 +56,21 @@ export class ClerkAuthGuard implements CanActivate {
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
     
     // Check if Clerk middleware populated the auth object
-    if (!request.auth || !request.auth.userId) {
+    if (!request.auth) {
       throw new UnauthorizedException('Authentication required');
     }
 
+    // Handle both old and new Clerk auth formats
+    let authData;
+    if (typeof request.auth === 'function') {
+      authData = request.auth();
+    } else {
+      authData = request.auth;
+    }
+
+    if (!authData || !authData.userId) {
+      throw new UnauthorizedException('Authentication required');
+    }
     return true;
   }
 }

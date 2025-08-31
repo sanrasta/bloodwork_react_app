@@ -56,8 +56,7 @@ export default function ResultSummary() {
   const { resultId, resetFlow } = useBloodworkStore();
   const { data: result, isLoading, isError, error } = useResultQuery(resultId);
   
-  // 📊 Performance monitoring (temporary)
-  console.log('🔄 ResultSummary re-render - resultId:', resultId);
+
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [expandedCardId, setExpandedCardId] = useState<string | null>(null);
   const [showWelcome, setShowWelcome] = useState(true);
@@ -114,8 +113,8 @@ export default function ResultSummary() {
     );
   }
 
-  // Handle error state
-  if (isError || !result) {
+  // Handle error state - only show error if we have an actual error AND we're not loading
+  if (isError && !isLoading) {
     return (
       <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
         <View style={styles.errorCard}>
@@ -131,6 +130,25 @@ export default function ResultSummary() {
             activeOpacity={0.7}
           >
             <Text style={styles.retryButtonText}>Try Again</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
+
+  // Handle no data case (but not loading and no error)
+  if (!result && !isLoading && !isError) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <View style={styles.loadingCard}>
+          <Text style={styles.title}>No Results Available</Text>
+          <Text style={styles.subtitle}>Please try uploading your bloodwork again</Text>
+          <TouchableOpacity 
+            style={styles.retryButton} 
+            onPress={resetFlow}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.retryButtonText}>New Analysis</Text>
           </TouchableOpacity>
         </View>
       </View>

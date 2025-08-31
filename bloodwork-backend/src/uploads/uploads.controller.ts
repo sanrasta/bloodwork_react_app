@@ -41,7 +41,7 @@ import { ClerkAuthGuard, CurrentUser, Public } from '../auth';
 
 @ApiTags('uploads')
 @Controller('uploads')
-// @UseGuards(ClerkAuthGuard) // Temporarily disabled for testing
+@UseGuards(ClerkAuthGuard)
 export class UploadsController {
   constructor(
     private readonly uploadsService: UploadsService,
@@ -137,7 +137,7 @@ export class UploadsController {
         })
     )
     file: Express.Multer.File,
-    // @CurrentUser() userId: string, // Temporarily disabled for testing
+    @CurrentUser() userId: string,
   ): Promise<ApiEnvelope<UploadResponse>> {
     /**
      * Delegate to service layer for business logic
@@ -146,7 +146,6 @@ export class UploadsController {
      * while services handle business logic. This separation enables
      * testing and reuse of upload logic in other contexts.
      */
-    const userId = 'test-user-id'; // Temporary for testing
     return this.uploadsService.saveUpload(file, userId);
   }
 

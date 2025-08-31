@@ -12,6 +12,7 @@
 
 import { Controller, Get } from '@nestjs/common';
 import { AppService } from './app.service';
+import { Public } from './auth';
 
 @Controller()
 export class AppController {
@@ -23,6 +24,7 @@ export class AppController {
    * WHY: Useful for testing if your API is running and accessible
    * from your React Native app during development.
    */
+  @Public()
   @Get()
   getApiInfo() {
     return this.appService.getApiInfo();
@@ -34,6 +36,7 @@ export class AppController {
    * WHY: Essential for monitoring, deployment health checks,
    * and ensuring all services (database, Redis) are operational.
    */
+  @Public()
   @Get('health')
   getHealthStatus() {
     return this.appService.getHealthStatus();
@@ -45,6 +48,7 @@ export class AppController {
    * WHY: Provides detailed API capabilities and endpoints
    * for your React Native app to discover available features.
    */
+  @Public()
   @Get('info')
   getDetailedApiInfo() {
     return this.appService.getDetailedApiInfo();
