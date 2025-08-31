@@ -4,6 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useBloodworkStore } from '../store/use-bloodwork-store';
 import { useResultQuery } from '../hooks/use-result-query';
 import { TestResult } from '../types/types';
+import ResultSummaryCard from './ResultSummaryCard';
+import type { TestResult as UITestResult } from '../types';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -57,6 +59,7 @@ export default function ResultSummary() {
   // 📊 Performance monitoring (temporary)
   console.log('🔄 ResultSummary re-render - resultId:', resultId);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
+  const [expandedCardId, setExpandedCardId] = useState<string | null>(null);
   const [showWelcome, setShowWelcome] = useState(true);
   const animationValue = useRef(new Animated.Value(0)).current;
   const arrowBlinkAnimation = useRef(new Animated.Value(1)).current;
@@ -147,8 +150,10 @@ export default function ResultSummary() {
 
   // Handle swipe gestures with PanResponder
   const panResponder = PanResponder.create({
+    onStartShouldSetPanResponder: () => false,
     onMoveShouldSetPanResponder: (evt, gestureState) => {
-      return Math.abs(gestureState.dx) > Math.abs(gestureState.dy);
+      const { dx } = gestureState;
+      return Math.abs(dx) > 12;
     },
     onPanResponderRelease: (evt, gestureState) => {
       const { dx } = gestureState;
@@ -162,6 +167,10 @@ export default function ResultSummary() {
       }
     },
   });
+
+  const handleCardToggle = (cardId: string) => {
+    setExpandedCardId(expandedCardId === cardId ? null : cardId);
+  };
 
   const renderTestCard = ({ item: testResult, index }: { item: TestResult & { note?: string }, index: number }) => {
     const animatedOffset = animationValue.interpolate({
@@ -188,9 +197,21 @@ export default function ResultSummary() {
       extrapolate: 'clamp',
     });
     
+    const uiTest: UITestResult = {
+      id: String((testResult as any).id ?? index + 1),
+      code: (testResult.testName || '').toUpperCase().replace(/[^A-Z0-9]+/g, '_'),
+      title: (testResult as any).testName ?? (testResult as any).title ?? 'Test',
+      value: (testResult as any).value ?? null,
+      unit: (testResult as any).unit,
+      status: ((testResult as any).status ?? 'optimal') as any,
+      insight: (testResult as any).insight ?? (testResult as any).meta?.insight,
+    };
+
+    const isCurrentCardExpanded = expandedCardId === uiTest.id;
+
     return (
       <Animated.View 
-        key={testResult.id}
+        key={uiTest.id}
         style={[
           styles.testCard,
           {
@@ -201,45 +222,18 @@ export default function ResultSummary() {
             ],
             opacity: animatedOpacity,
             zIndex: sortedResults.length - Math.abs(index - currentCardIndex),
+            height: isCurrentCardExpanded ? 500 : 300,
+            // Keep card centered, only expand downward
+            top: '50%',
+            marginTop: isCurrentCardExpanded ? -250 : -150, // Adjust for new height while staying centered
           }
-        ]}>
-        <View style={styles.testCardHeader}>
-          <Text style={styles.testName}>{testResult.testName}</Text>
-          <View style={[
-            styles.statusBadge,
-            { backgroundColor: testResult.status === 'critical' ? '#FEE2E2' : 
-                              testResult.status === 'high' || testResult.status === 'low' ? '#FEF3C7' : 
-                              '#D1FAE5' }
-          ]}>
-            <Text style={[
-              styles.statusText,
-              { color: testResult.status === 'critical' ? '#DC2626' : 
-                       testResult.status === 'high' || testResult.status === 'low' ? '#D97706' : 
-                       '#059669' }
-            ]}>
-              {testResult.status.toUpperCase()}
-            </Text>
-          </View>
-        </View>
-        
-        <View style={styles.testValueContainer}>
-          <Text style={styles.testValue}>{testResult.value}</Text>
-          <Text style={styles.testUnit}>{testResult.unit}</Text>
-        </View>
-        
-        <Text style={styles.referenceRange}>
-          Normal Range: {typeof testResult.referenceRange === 'string' ? testResult.referenceRange : `${testResult.referenceRange.min}-${testResult.referenceRange.max}`}
-        </Text>
-        
-        {testResult.status !== 'normal' && (
-          <View style={styles.interpretationContainer}>
-            <Text style={styles.interpretationText}>
-              {testResult.status === 'critical' ? '⚠️ Requires immediate attention' :
-               testResult.status === 'high' ? '📈 Above normal range' :
-               testResult.status === 'low' ? '📉 Below normal range' : ''}
-            </Text>
-          </View>
-        )}
+        ]}
+      >
+        <ResultSummaryCard 
+          test={uiTest} 
+          isExpanded={isCurrentCardExpanded}
+          onToggle={() => handleCardToggle(uiTest.id)}
+        />
       </Animated.View>
     );
   };
@@ -264,7 +258,7 @@ export default function ResultSummary() {
             <Text style={styles.statLabel}>Tests</Text>
           </View>
           <View style={styles.statItem}>
-            <Text style={[styles.statNumber, { color: '#10B981' }]}>{normalCount}</Text>
+            <Text style={[styles.statNumber, { color: '#1E40AF' }]}>{normalCount}</Text>
             <Text style={styles.statLabel}>Normal</Text>
           </View>
           <View style={styles.statItem}>
@@ -273,7 +267,7 @@ export default function ResultSummary() {
           </View>
           {criticalCount > 0 && (
             <View style={styles.statItem}>
-              <Text style={[styles.statNumber, { color: '#EF4444' }]}>{criticalCount}</Text>
+              <Text style={[styles.statNumber, { color: '#DC2626' }]}>{criticalCount}</Text>
               <Text style={styles.statLabel}>Critical</Text>
             </View>
           )}
@@ -282,7 +276,10 @@ export default function ResultSummary() {
 
       {/* Swipeable Test Cards */}
       <View style={styles.cardsSection}>
-        <Text style={styles.sectionTitle}>Test Results</Text>
+        {/* Only show section title when no card is expanded */}
+        {!expandedCardId && (
+          <Text style={styles.sectionTitle}>Test Results</Text>
+        )}
         <View style={styles.deckContainer} {...panResponder.panHandlers}>
           {sortedResults.map((testResult, index) => renderTestCard({ item: testResult, index }))}
           
@@ -320,7 +317,7 @@ export default function ResultSummary() {
               key={index}
               style={[
                 styles.indicator,
-                { backgroundColor: index === currentCardIndex ? '#3B82F6' : '#E5E7EB' }
+                { backgroundColor: index === currentCardIndex ? '#1E40AF' : '#2a2a2a' }
               ]}
             />
           ))}
@@ -331,7 +328,8 @@ export default function ResultSummary() {
 
       {/* Notes and Actions */}
       <View style={styles.footer}>
-        {sortedResults.length > 0 && sortedResults[currentCardIndex] && (
+        {/* Only show insight section when no card is expanded */}
+        {!expandedCardId && sortedResults.length > 0 && sortedResults[currentCardIndex] && (
           <View style={styles.notesSection}>
             <Text style={styles.notesTitle}>📝 {sortedResults[currentCardIndex].testName} Insight</Text>
             <Text style={styles.notesText}>
@@ -355,7 +353,7 @@ export default function ResultSummary() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#0a0a0a',
   },
   header: {
     paddingHorizontal: 20,
@@ -365,26 +363,28 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#1F2937',
+    color: '#E5E5E5',
     textAlign: 'center',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 14,
-    color: '#6B7280',
+    color: '#9CA3AF',
     textAlign: 'center',
     marginBottom: 16,
   },
   statsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#1a1a1a',
     borderRadius: 12,
     padding: 12,
+    borderWidth: 1,
+    borderColor: '#2a2a2a',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
     elevation: 5,
   },
   statItem: {
@@ -393,11 +393,11 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#1F2937',
+    color: '#E5E5E5',
   },
   statLabel: {
     fontSize: 12,
-    color: '#6B7280',
+    color: '#9CA3AF',
     marginTop: 4,
   },
   cardsSection: {
@@ -407,7 +407,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1F2937',
+    color: '#E5E5E5',
     marginBottom: 12,
     textAlign: 'center',
   },
@@ -421,12 +421,15 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: screenWidth - 64,
     height: 300,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#1a1a1a',
     borderRadius: 20,
-    padding: 28,
+    padding: 0,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#2a2a2a',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
+    shadowOpacity: 0.3,
     shadowRadius: 12,
     elevation: 12,
     justifyContent: 'center',
@@ -441,7 +444,7 @@ const styles = StyleSheet.create({
   testName: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#1F2937',
+    color: '#E5E5E5',
     flex: 1,
   },
   statusBadge: {
@@ -461,27 +464,29 @@ const styles = StyleSheet.create({
   testValue: {
     fontSize: 48,
     fontWeight: '700',
-    color: '#1F2937',
+    color: '#E5E5E5',
   },
   testUnit: {
     fontSize: 16,
-    color: '#6B7280',
+    color: '#9CA3AF',
     marginTop: 4,
   },
   referenceRange: {
     fontSize: 14,
-    color: '#6B7280',
+    color: '#9CA3AF',
     textAlign: 'center',
     marginBottom: 16,
   },
   interpretationContainer: {
-    backgroundColor: '#F3F4F6',
+    backgroundColor: '#111111',
     borderRadius: 8,
     padding: 12,
+    borderWidth: 1,
+    borderColor: '#2a2a2a',
   },
   interpretationText: {
     fontSize: 14,
-    color: '#374151',
+    color: '#E5E5E5',
     textAlign: 'center',
     fontWeight: '500',
   },
@@ -503,29 +508,31 @@ const styles = StyleSheet.create({
     paddingTop: 16,
   },
   notesSection: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#1a1a1a',
     borderRadius: 12,
     padding: 16,
     marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#2a2a2a',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
     elevation: 5,
   },
   notesTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1F2937',
+    color: '#E5E5E5',
     marginBottom: 8,
   },
   notesText: {
     fontSize: 14,
-    color: '#4B5563',
+    color: '#9CA3AF',
     lineHeight: 20,
   },
   primaryButton: {
-    backgroundColor: '#3B82F6',
+    backgroundColor: '#DC2626',
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
@@ -537,24 +544,26 @@ const styles = StyleSheet.create({
   },
   // Loading and error states
   loadingCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 24,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
-    margin: 20,
-  },
-  errorCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#1a1a1a',
     borderRadius: 12,
     padding: 24,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#FEE2E2',
+    borderColor: '#2a2a2a',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+    margin: 20,
+  },
+  errorCard: {
+    backgroundColor: '#1a1a1a',
+    borderRadius: 12,
+    padding: 24,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#7f1d1d',
     margin: 20,
   },
   errorIcon: {
@@ -563,13 +572,13 @@ const styles = StyleSheet.create({
   },
   errorMessage: {
     fontSize: 14,
-    color: '#6B7280',
+    color: '#9CA3AF',
     textAlign: 'center',
     marginBottom: 20,
     lineHeight: 20,
   },
   retryButton: {
-    backgroundColor: '#EF4444',
+    backgroundColor: '#DC2626',
     borderRadius: 8,
     paddingHorizontal: 24,
     paddingVertical: 12,
@@ -589,7 +598,7 @@ const styles = StyleSheet.create({
     height: 40,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(59, 130, 246, 0.2)',
+    backgroundColor: 'rgba(30, 64, 175, 0.25)',
     borderRadius: 20,
     zIndex: 1000,
     elevation: 10,
@@ -603,14 +612,14 @@ const styles = StyleSheet.create({
     height: 40,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(59, 130, 246, 0.2)',
+    backgroundColor: 'rgba(30, 64, 175, 0.25)',
     borderRadius: 20,
     zIndex: 1000,
     elevation: 10,
   },
   arrowText: {
     fontSize: 24,
-    color: '#3B82F6',
+    color: '#1E40AF',
     fontWeight: '600',
     textAlign: 'center',
     textAlignVertical: 'center',

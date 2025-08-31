@@ -1,9 +1,8 @@
 import React from 'react';
 import { StyleSheet } from 'react-native';
-import { SignedIn, SignedOut } from '@clerk/clerk-expo';
 import { ThemedView } from '../../src/shared/components';
 import { UploadCard, AnalysisProgress, ResultSummary, useBloodworkStore } from '../../src/features/bloodwork-results';
-import { SignInScreen } from '../../src/features/auth';
+import QuestionnaireGate from '../../src/components/QuestionnaireGate';
 
 export default function HomeScreen() {
   const step = useBloodworkStore((state) => state.step);
@@ -25,14 +24,11 @@ export default function HomeScreen() {
   };
 
   return (
-    <ThemedView style={styles.container}>
-      <SignedIn>
+    <QuestionnaireGate>
+      <ThemedView style={styles.container}>
         {renderCurrentStep()}
-      </SignedIn>
-      <SignedOut>
-        <SignInScreen />
-      </SignedOut>
-    </ThemedView>
+      </ThemedView>
+    </QuestionnaireGate>
   );
 }
 

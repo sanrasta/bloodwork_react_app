@@ -2,12 +2,12 @@ import { create } from 'zustand';
 import type { BloodworkFilters, BloodworkListState, BloodworkFlowState, PickedFile } from '../types/types';
 
 interface BloodworkStore extends BloodworkListState, BloodworkFlowState {
-  // ✅ CLIENT/UI STATE ACTIONS
+ 
   setFilters: (filters: Partial<BloodworkFilters>) => void;
   clearFilters: () => void;
   setSelectedResultId: (id: string | null) => void;
   
-  // ✅ MVP FLOW ACTIONS  
+  //MVP FLOW ACTIONS  
   setStep: (step: BloodworkFlowState['step']) => void;
   setPickedFile: (file: PickedFile | undefined) => void;
   setUploadId: (uploadId: string | undefined) => void;
@@ -24,11 +24,11 @@ const initialFilters: BloodworkFilters = {
 };
 
 export const useBloodworkStore = create<BloodworkStore>((set, get) => ({
-  // ✅ CLIENT/UI STATE ONLY
+  //CLIENT/UI STATE ONLY
   filters: initialFilters,
   selectedResultId: null,
 
-  // ✅ MVP FLOW STATE
+  //MVP FLOW STATE
   step: 'idle',
   pickedFile: undefined,
   uploadId: undefined,
@@ -36,7 +36,7 @@ export const useBloodworkStore = create<BloodworkStore>((set, get) => ({
   resultId: undefined,
   error: undefined,
 
-  // ✅ CLIENT/UI ACTIONS
+  //CLIENT/UI ACTIONS
   setFilters: (newFilters) => set((state) => ({
     filters: { ...state.filters, ...newFilters }
   })),
