@@ -122,6 +122,18 @@ async function bootstrap() {
   }
 
   logExpressRoutes();
+  // Ensure uploads directory exists to avoid runtime file system errors
+  try {
+    const fs = require('fs');
+    const uploadPath = app.get(ConfigService).get<string>('upload.path') || './uploads';
+    if (!fs.existsSync(uploadPath)) {
+      fs.mkdirSync(uploadPath, { recursive: true });
+      console.log(`📁 Created upload directory at: ${uploadPath}`);
+    }
+  } catch (err) {
+    console.warn('⚠️ Could not ensure uploads directory:', err);
+  }
+
   await app.listen(port, '0.0.0.0');
 
   /**

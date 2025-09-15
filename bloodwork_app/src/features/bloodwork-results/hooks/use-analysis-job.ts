@@ -4,26 +4,21 @@ import { useEffect, useRef } from 'react';
 import { analysisJobOptions, analysisResultOptions } from '../lib/analysis-job.options';
 import { bloodworkQueryKeys } from '../lib/query-keys';
 import { reactQueryLogger } from '../../../shared/utils/logger';
+import { getAnalysisJob, getResult } from '../api/bloodwork-api';
 
 // Global set to track active prefetches and prevent duplicates
 const activePrefetches = new Set<string>();
 
 /**
  * Hook for querying analysis job status with smart polling and result prefetching
- * 
- * Features:
- * - Smart polling: automatically stops when job is no longer running
- * - Battery optimization: reduces network calls by ~90% after completion
- * - Result prefetching: preloads results when job completes for instant navigation
- * - Type-safe query keys from centralized factory
  * - Consistent retry logic for mobile networks
  */
+
 export const useAnalysisJob = (jobId: string | undefined) => {
   const { getToken } = useAuth();
   const queryClient = useQueryClient();
   const prefetchedResults = useRef(new Set<string>());
   
-  // Always call hooks in the same order
   const query = useQuery({
     queryKey: bloodworkQueryKeys.analysisJob(jobId || 'disabled'),
     queryFn: async () => {
@@ -31,7 +26,10 @@ export const useAnalysisJob = (jobId: string | undefined) => {
       if (!token) {
         throw new Error('Authentication required');
       }
-      return analysisJobOptions(token, jobId || 'disabled').queryFn();
+      reactQueryLogger.polling('Polling job status for:', jobId);
+      const result = await getAnalysisJob(token, jobId || 'disabled');
+      reactQueryLogger.polling('Job status:', result.data.status, 'Progress:', result.data.progress);
+      return result.data;
     },
     enabled: !!jobId,
     // Copy other options from analysisJobOptions
@@ -71,14 +69,13 @@ export const useAnalysisJob = (jobId: string | undefined) => {
     gcTime: 5 * 60 * 1000,
   });
   
-  // Prefetch results when job completes (Pattern 5: Prefetching)
+  // Prefetch results when job completes 
   useEffect(() => {
     if (!jobId) return; // Early return is safe in useEffect
     const job = query.data;
     
-    // Only prefetch if job is completed and has a resultId
     if (job?.status === 'completed' && job.resultId) {
-      // Performance check: skip if already cached
+      
       const resultQueryKey = bloodworkQueryKeys.result(job.resultId);
       const existingData = queryClient.getQueryData(resultQueryKey);
       
@@ -87,13 +84,11 @@ export const useAnalysisJob = (jobId: string | undefined) => {
         return;
       }
       
-      // Deduplication: skip if already prefetching
       if (activePrefetches.has(job.resultId)) {
         reactQueryLogger.cache('Prefetch already in progress, skipping for:', job.resultId);
         return;
       }
       
-      // Prevent duplicate prefetches from this hook instance
       if (prefetchedResults.current.has(job.resultId)) {
         reactQueryLogger.cache('Already prefetched from this hook, skipping for:', job.resultId);
         return;
@@ -113,7 +108,9 @@ export const useAnalysisJob = (jobId: string | undefined) => {
           if (!token) {
             throw new Error('Authentication required');
           }
-          return analysisResultOptions(token, job.resultId).queryFn();
+          reactQueryLogger.polling('Fetching analysis result for:', job.resultId);
+          const result = await getResult(token, job.resultId!);
+          return result.data;
         },
         staleTime: 10 * 60 * 1000,
         gcTime: 30 * 60 * 1000,

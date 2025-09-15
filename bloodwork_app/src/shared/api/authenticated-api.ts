@@ -1,4 +1,4 @@
-import { apiClient, type ApiResponse } from './base';
+import { apiClient, type ApiResponse, getApiBaseUrl } from './base';
 import Constants from 'expo-constants';
 
 // Helper function to make authenticated API calls
@@ -25,19 +25,8 @@ export const createAuthenticatedApiCall = <T extends any[], R>(
 
 // For multipart uploads (like PDF files), we need special handling
 function getUploadBaseUrl(): string {
-  // If environment variable is set, use it
-  if (process.env.EXPO_PUBLIC_API_URL) {
-    return process.env.EXPO_PUBLIC_API_URL;
-  }
-  
-  // Auto-detect from Expo's development server
-  if (__DEV__ && Constants.expoConfig?.hostUri) {
-    const [ip] = Constants.expoConfig.hostUri.split(':');
-    return `http://${ip}:3001/api`;
-  }
-  
-  // Fallback for simulators
-  return 'http://localhost:3001/api';
+  // Reuse the same resolver as the main API so behavior is consistent
+  return getApiBaseUrl();
 }
 
 export const uploadWithAuth = async (
@@ -47,26 +36,35 @@ export const uploadWithAuth = async (
 ): Promise<ApiResponse<any>> => {
   const baseUrl = getUploadBaseUrl();
   const fullUrl = `${baseUrl}${endpoint}`;
-  
-  const response = await fetch(fullUrl, {
-    method: 'POST',
-    body: formData,
-    headers: {
-      Authorization: `Bearer ${authToken}`,
-      // Don't set Content-Type - let browser set it with proper boundary for multipart
-    },
-  });
+  console.log('[uploadWithAuth] Uploading to:', fullUrl);
+  try {
+    const response = await fetch(fullUrl, {
+      method: 'POST',
+      body: formData,
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+      },
+    });
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw {
+        message: errorData.message || 'Upload failed',
+        status: response.status,
+        errors: errorData.errors,
+      } as ApiError;
+    }
+
+    return await response.json();
+  } catch (e: any) {
+    if (e && typeof e === 'object' && 'status' in e) {
+      throw e as ApiError;
+    }
     throw {
-      message: errorData.message || 'Upload failed',
-      status: response.status,
-      errors: errorData.errors,
-    };
+      message: 'Network error occurred',
+      status: 0,
+    } as ApiError;
   }
-
-  return await response.json();
 };
 
 // Authenticated API methods

@@ -1,7 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@clerk/clerk-expo';
-import { analysisResultOptions } from '../lib/analysis-job.options';
 import { bloodworkQueryKeys } from '../lib/query-keys';
+import { getResult } from '../api/bloodwork-api';
+import type { BloodworkResult } from '../types/types';
 
 /**
  * Hook for querying bloodwork analysis results
@@ -16,14 +17,15 @@ export const useResultQuery = (resultId: string | undefined) => {
   const { getToken } = useAuth();
   
   // Always call hooks in the same order
-  return useQuery({
+  return useQuery<BloodworkResult, Error, BloodworkResult>({
     queryKey: bloodworkQueryKeys.result(resultId || 'disabled'),
     queryFn: async () => {
       const token = await getToken();
       if (!token) {
         throw new Error('Authentication required');
       }
-      return analysisResultOptions(token, resultId || 'disabled').queryFn();
+      const resp = await getResult(token, resultId!);
+      return resp.data;
     },
     enabled: !!resultId,
     staleTime: 10 * 60 * 1000,

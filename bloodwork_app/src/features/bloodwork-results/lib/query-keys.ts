@@ -37,16 +37,14 @@ export type BloodworkQueryKey = ReturnType<
 
 // Helper functions for common invalidation patterns
 export const invalidationHelpers = {
-  // Invalidate all bloodwork data
   invalidateAll: () => bloodworkQueryKeys.all,
-  
+
   // Invalidate all analysis jobs (useful after starting new analysis)
   invalidateAnalysisJobs: () => bloodworkQueryKeys.analysisJobs(),
   
   // Invalidate all results (useful after analysis completion)
   invalidateResults: () => bloodworkQueryKeys.results(),
   
-  // Invalidate specific user's data
   invalidateUserData: (userId: string) => [
     bloodworkQueryKeys.userUploads(userId),
     bloodworkQueryKeys.userAnalysisJobs(userId),

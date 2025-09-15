@@ -102,8 +102,10 @@ export class UploadsController {
       
       // File filter for security and validation
       fileFilter: (req, file, cb) => {
-        // Only allow PDF files
-        if (file.mimetype === 'application/pdf') {
+        // Accept common iOS fallback type application/octet-stream and verify by extension
+        const isPdfMime = file.mimetype === 'application/pdf' || file.mimetype === 'application/octet-stream';
+        const hasPdfExt = (file.originalname || '').toLowerCase().endsWith('.pdf');
+        if (isPdfMime && hasPdfExt) {
           cb(null, true);
         } else {
           cb(new BadRequestException('Only PDF files are allowed'), false);

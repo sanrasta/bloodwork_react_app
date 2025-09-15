@@ -1,20 +1,8 @@
 /**
  * Test Parsing Utilities
- * 
- * WHY: Pure functions for parsing individual test results from PDF text.
- * These utilities handle the complex pattern matching required to extract
- * test values, reference ranges, and units from various lab report formats.
- * 
- * FUNCTIONALITY:
- * - Parse test results using multi-line pattern matching
- * - Extract reference ranges and units
- * - Determine test status based on values vs reference ranges
- * - Handle various lab report formats (IgG, Testosterone, SHBG, etc.)
- * 
- * BENEFITS:
- * - Pure functions - highly testable and maintainable
- * - Modular - can add new test patterns without affecting others
- * - Reusable - other parsing services can use the same logic
+ * - Pure functions
+ * - Modular
+ * - Reusable 
  */
 
 import { Logger } from '@nestjs/common';

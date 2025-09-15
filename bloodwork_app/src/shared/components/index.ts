@@ -6,6 +6,7 @@ export { default as HelloWave } from './HelloWave';
 export { default as ParallaxScrollView } from './ParallaxScrollView';
 export { ThemedText } from './ThemedText';
 export { ThemedView } from './ThemedView';
+export { default as HealthBanner } from './HealthBanner';
 
 // UI components
 export * from './ui/IconSymbol';

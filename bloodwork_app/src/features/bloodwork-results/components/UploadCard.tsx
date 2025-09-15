@@ -1,16 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { HealthBanner } from '../../../shared/components';
+import { useApiHealth } from '../../../shared/hooks/use-api-health';
+import { useAuth } from '@clerk/clerk-expo';
 import * as DocumentPicker from 'expo-document-picker';
 import { useUploadFlow } from '../hooks/flows/use-upload-flow';
 import { useUploadMutation } from '../hooks/use-upload-mutation';
 import { useStartAnalysis } from '../hooks/use-start-analysis';
+import { uploadPdfWithRetry } from '../../../shared/api/upload-with-progress';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 export default function UploadCard() {
   const [isProcessing, setIsProcessing] = useState(false);
+  const inFlightRef = useRef(false);
+  const { isHealthy, isLoading: healthChecking } = useApiHealth(15000);
+  const { isSignedIn, getToken } = useAuth();
+  const [uploadProgress, setUploadProgress] = useState(0);
   
-  // ✅ TIER 2: Custom Hook - Clean, selective subscriptions with computed values
   const { 
     step, 
     pickedFile, 
@@ -23,8 +30,6 @@ export default function UploadCard() {
     setJobId, 
     setError 
   } = useUploadFlow();
-  
-  // 📊 Performance monitoring - validate no regressions
 
   
   const uploadMutation = useUploadMutation();
@@ -84,21 +89,33 @@ export default function UploadCard() {
   const startAnalysisFlow = async () => {
     if (!pickedFile) return;
 
+    // Guard against double submits (tap spam or slow state commit)
+    if (inFlightRef.current || isProcessing || uploadMutation.isPending || startAnalysisMutation.isPending) {
+      return;
+    }
+
     setIsProcessing(true);
+    inFlightRef.current = true;
     setError(undefined);
+    setUploadProgress(0);
 
     try {
-      // Create FormData for upload
-      const formData = new FormData();
-      formData.append('file', {
-        uri: pickedFile.uri,
-        type: pickedFile.type,
-        name: pickedFile.name,
-      } as any);
+      // Upload with progress + retry
+      const resolvedToken = await getToken();
+      if (!resolvedToken) {
+        throw new Error('Authentication required. Please sign in.');
+      }
 
-      // Upload the file
+      const uploadResponse = await uploadPdfWithRetry<{ uploadId: string }>({
+        fileUri: pickedFile.uri,
+        fileName: pickedFile.name,
+        mimeType: pickedFile.type,
+        authToken: resolvedToken,
+        onProgress: (p) => {
+          setUploadProgress(p);
+        },
+      });
       setStep('uploaded');
-      const uploadResponse = await uploadMutation.mutateAsync(formData);
       const uploadId = uploadResponse.data.uploadId;
       setUploadId(uploadId);
 
@@ -114,6 +131,7 @@ export default function UploadCard() {
       setStep('failed');
     } finally {
       setIsProcessing(false);
+      inFlightRef.current = false;
     }
   };
 
@@ -121,11 +139,15 @@ export default function UploadCard() {
     setPickedFile(undefined);
     setStep('idle');
     setError(undefined);
+    setUploadProgress(0);
   };
 
   if (step === 'idle') {
     return (
-      <View style={[styles.container, { flex: 1, justifyContent: 'center', alignItems: 'center' }]}>
+      <View style={[styles.container, { flex: 1, justifyContent: 'center', alignItems: 'center' }]}>        
+        <View style={{ width: '100%', maxWidth: 520 }}>
+          <HealthBanner onlyWhenUnhealthy />
+        </View>
         <View style={styles.uploadArea}>
           <Text style={styles.title}>Upload Bloodwork Report</Text>
           <Text style={styles.subtitle}>
@@ -149,8 +171,14 @@ export default function UploadCard() {
   }
 
   if (step === 'picked' && pickedFile) {
+    const canAnalyze = isHealthy && isSignedIn && !isProcessing && !uploadMutation.isPending && !startAnalysisMutation.isPending;
+    const disabledReason = !isSignedIn
+      ? 'Sign in to analyze'
+      : !isHealthy
+        ? 'API not reachable'
+        : undefined;
     return (
-      <View style={[styles.container, { flex: 1, justifyContent: 'center', alignItems: 'center' }]}>
+      <View style={[styles.container, { flex: 1, justifyContent: 'center', alignItems: 'center' }]}>        
         <View style={styles.fileInfo}>
           <Text style={styles.title}>File Selected</Text>
           
@@ -171,21 +199,25 @@ export default function UploadCard() {
             </TouchableOpacity>
             
             <TouchableOpacity 
-              style={[styles.primaryButton, isProcessing && styles.disabledButton]} 
+              style={[styles.primaryButton, (!canAnalyze) && styles.disabledButton]} 
               onPress={startAnalysisFlow}
-              disabled={isProcessing}
+              disabled={!canAnalyze}
               activeOpacity={0.7}
             >
               <Text style={styles.primaryButtonText}>
-                {isProcessing ? 'Starting...' : '🧠 Analyze'}
+                {isProcessing ? `Uploading ${(uploadProgress*100).toFixed(0)}%…` : '🧠 Analyze'}
               </Text>
             </TouchableOpacity>
           </View>
+          {disabledReason && (
+            <Text style={{ color: '#9CA3AF', marginTop: 8, textAlign: 'center' }}>
+              {disabledReason}{healthChecking ? ' (checking...)' : ''}
+            </Text>
+          )}
         </View>
       </View>
     );
   }
-
   return null;
 }
 

@@ -1,23 +1,38 @@
 // Base API configuration and fetch wrapper
 import Constants from 'expo-constants';
 
-function getApiBaseUrl(): string {
-  // If environment variable is set, use it (production/custom config)
-  if (process.env.EXPO_PUBLIC_API_URL) {
-    return process.env.EXPO_PUBLIC_API_URL;
+import { Platform } from 'react-native';
+
+export function getApiBaseUrl(): string {
+  const desiredPort = Number(process.env.EXPO_PUBLIC_API_PORT) || 3000;
+
+  // 1) Env override wins. If it uses localhost in dev, rewrite to Expo host IP.
+  const envUrl = process.env.EXPO_PUBLIC_API_URL;
+  if (envUrl) {
+    if (__DEV__ && Constants.expoConfig?.hostUri && /localhost/i.test(envUrl)) {
+      const [ip] = String(Constants.expoConfig.hostUri).split(':');
+      const rewritten = envUrl.replace(/localhost/gi, ip);
+      console.log('🔍 [DEBUG] Rewriting localhost to Expo host IP:', rewritten);
+      return rewritten;
+    }
+    return envUrl;
   }
-  
-  // Auto-detect from Expo's development server
-  // When using --lan, Expo provides the network IP in manifest
+
+  // 2) Auto-detect IP from Expo when available (works on physical devices)
   if (__DEV__ && Constants.expoConfig?.hostUri) {
-    const [ip] = Constants.expoConfig.hostUri.split(':');
-    console.log('🔍 [DEBUG] Auto-detected IP from Expo:', ip);
-    return `http://${ip}:3001/api`;
+    const [ip] = String(Constants.expoConfig.hostUri).split(':');
+    const url = `http://${ip}:${desiredPort}/api`;
+    console.log('🔍 [DEBUG] Auto-detected IP from Expo:', url);
+    return url;
   }
-  
-  // Fallback for simulators or when hostUri is not available
-  console.log('🔍 [DEBUG] Using localhost fallback');
-  return 'http://localhost:3001/api';
+
+  // 3) Fallbacks for emulators/simulators
+  if (Platform.OS === 'android') {
+    // Android emulator loopback to host
+    return `http://10.0.2.2:${desiredPort}/api`;
+  }
+  // iOS simulator / generic fallback
+  return `http://localhost:${desiredPort}/api`;
 }
 
 const API_BASE_URL = getApiBaseUrl();
